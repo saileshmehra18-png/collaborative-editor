@@ -53,7 +53,13 @@ function getOrCreateDoc(docId: string): Promise<Y.Doc> {
   return initialization;
 }
 
-function queueYjsUpdate(docId: string, ydoc: Y.Doc, update: Uint8Array, origin: WebSocket): void {
+function queueYjsUpdate(
+  docId: string,
+  ydoc: Y.Doc,
+  update: Uint8Array,
+  origin: WebSocket,
+  updateId?: number,
+): void {
   const previousUpdate = updateQueues.get(docId) ?? Promise.resolve();
   const nextUpdate = previousUpdate.then(async () => {
     if (persistenceFailures.has(docId)) {
@@ -62,6 +68,13 @@ function queueYjsUpdate(docId: string, ydoc: Y.Doc, update: Uint8Array, origin: 
 
     await saveUpdate(docId, update, "client");
     Y.applyUpdate(ydoc, update, origin);
+    if (updateId !== undefined && origin.readyState === WebSocket.OPEN) {
+      try {
+        origin.send(JSON.stringify({ type: "ack", id: updateId }));
+      } catch (error) {
+        console.warn("Failed to acknowledge persisted Yjs update", error);
+      }
+    }
   });
 
   updateQueues.set(docId, nextUpdate.catch((error: unknown) => {
@@ -203,7 +216,8 @@ export function attachWsServer(server: any) {
 
       if (msg.type === "update") {
         const update = new Uint8Array(msg.update);
-        queueYjsUpdate(docId, ydoc, update, ws);
+        const updateId = Number.isSafeInteger(msg.id) ? msg.id as number : undefined;
+        queueYjsUpdate(docId, ydoc, update, ws, updateId);
       } else if (msg.type === "awareness") {
         // Apply awareness update from client
         const update = new Uint8Array(msg.update);

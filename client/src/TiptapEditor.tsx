@@ -1,15 +1,17 @@
 import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCaret from '@tiptap/extension-collaboration-caret';
+import { Placeholder } from '@tiptap/extensions/placeholder';
 import { useEditor, useEditorState, EditorContent } from '@tiptap/react';
 import type { Editor as TiptapEditorInstance } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import * as Y from 'yjs';
 import { getAuthSession } from './auth/authStorage';
 import {
     CustomYjsWebSocketProvider,
     type ProviderStatus,
+    type ProviderSyncStatus,
 } from './providers/CustomYjsWebSocketProvider';
 import './TiptapEditor.css';
 
@@ -44,7 +46,10 @@ const STATUS_LABELS: Record<ProviderStatus, string> = {
 export type TiptapEditorProps = {
     className?: string;
     docId?: string;
+    offlineMode?: boolean;
     onConnectionStatusChange?: (status: ProviderStatus) => void;
+    onOfflineEditCountChange?: (count: number) => void;
+    onSyncStatusChange?: (status: ProviderSyncStatus) => void;
     renderToolbar?: (editor: TiptapEditorInstance | null) => ReactNode;
 };
 
@@ -81,7 +86,10 @@ function ToolbarButton({
 export default function TiptapEditor({
     className,
     docId = DOCUMENT_ID,
+    offlineMode = false,
     onConnectionStatusChange,
+    onOfflineEditCountChange,
+    onSyncStatusChange,
     renderToolbar,
 }: TiptapEditorProps) {
     const [ydoc] = useState(() => new Y.Doc());
@@ -97,13 +105,21 @@ export default function TiptapEditor({
                 setConnectionStatus(status);
                 onConnectionStatusChange?.(status);
             },
+            onOfflineEditCountChange,
+            onSyncStatusChange,
         );
         setProvider(activeProvider);
         return () => {
             activeProvider.onStatusChange = undefined;
+            activeProvider.onOfflineEditCountChange = undefined;
+            activeProvider.onSyncStatusChange = undefined;
             activeProvider.destroy();
         };
-    }, [docId, onConnectionStatusChange, ydoc]);
+    }, [docId, onConnectionStatusChange, onOfflineEditCountChange, onSyncStatusChange, ydoc]);
+
+    useLayoutEffect(() => {
+        provider?.setOfflineMode(offlineMode);
+    }, [offlineMode, provider]);
 
     const collaborationCaret = provider && authenticatedUser
         ? CollaborationCaret.configure({
@@ -119,13 +135,9 @@ export default function TiptapEditor({
         extensions: [
             StarterKit.configure({ undoRedo: false }),
             Collaboration.configure({ document: ydoc }),
+            Placeholder.configure({ placeholder: 'Start writing here...' }),
             ...(collaborationCaret ? [collaborationCaret] : []),
         ],
-        onCreate: ({ editor: createdEditor }) => {
-            if (ydoc.getXmlFragment('default').length === 0) {
-                createdEditor.commands.setContent('<p>Start writing here...</p>');
-            }
-        },
     }, [provider]);
 
     const toolbarState = useEditorState({

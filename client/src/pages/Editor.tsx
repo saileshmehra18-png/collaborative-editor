@@ -12,7 +12,10 @@ import {
 } from 'lucide-react'
 import TiptapEditor from '../TiptapEditor'
 import { getAuthSession } from '../auth/authStorage'
-import type { ProviderStatus } from '../providers/CustomYjsWebSocketProvider'
+import type {
+  ProviderStatus,
+  ProviderSyncStatus,
+} from '../providers/CustomYjsWebSocketProvider'
 import './Editor.css'
 
 function Editor() {
@@ -21,6 +24,26 @@ function Editor() {
 
   const [title, setTitle] = useState('Untitled')
   const [connectionStatus, setConnectionStatus] = useState<ProviderStatus>('connecting')
+  const [offlineMode, setOfflineMode] = useState(false)
+  const [offlineEditCount, setOfflineEditCount] = useState(0)
+  const [syncStatus, setSyncStatus] = useState<ProviderSyncStatus>('idle')
+
+  const syncStatusLabel = syncStatus === 'synced'
+    ? 'Synchronized to server'
+    : syncStatus === 'syncing'
+      ? 'Syncing Yjs updates'
+      : offlineMode
+        ? offlineEditCount > 0 ? 'Offline edits pending' : 'Offline mode enabled'
+        : 'Waiting for connection'
+  const connectionStatusLabel = offlineMode
+    ? 'Offline'
+    : connectionStatus === 'connected'
+      ? 'Connected'
+      : connectionStatus === 'connecting'
+        ? 'Connecting'
+        : connectionStatus === 'error'
+          ? 'Connection error'
+          : 'Disconnected'
 
   useEffect(() => {
     if (!docId) return
@@ -60,15 +83,12 @@ function Editor() {
 
   return (
     <div className="editor-page">
-      {(connectionStatus === 'disconnected' || connectionStatus === 'error') && (
+      {!offlineMode && (connectionStatus === 'disconnected' || connectionStatus === 'error') && (
         <div className="disconnect-banner">
           <span>
             <WifiOff size={16} style={{ display: 'inline', marginRight: '8px' }} />
-            WebSocket connection unavailable. Check your session and connection.
+            WebSocket connection unavailable. Reconnecting automatically.
           </span>
-          <button onClick={() => window.location.reload()}>
-            Retry
-          </button>
         </div>
       )}
 
@@ -99,12 +119,55 @@ function Editor() {
         </div>
       </header>
 
+      <section className="conflict-simulator" aria-labelledby="conflict-simulator-title">
+        <div className="conflict-simulator-heading">
+          <h2 id="conflict-simulator-title">Conflict Simulator</h2>
+          <label className="offline-mode-toggle">
+            <input
+              type="checkbox"
+              checked={offlineMode}
+              onChange={(event) => setOfflineMode(event.target.checked)}
+            />
+            Offline Mode
+          </label>
+        </div>
+        <dl className="conflict-simulator-stats">
+          <div>
+            <dt>Connection</dt>
+            <dd>{connectionStatusLabel}</dd>
+          </div>
+          <div>
+            <dt>Mode</dt>
+            <dd>{offlineMode ? 'Offline' : 'Online'}</dd>
+          </div>
+          <div>
+            <dt>Local edits while offline</dt>
+            <dd>{offlineEditCount}</dd>
+          </div>
+          <div>
+            <dt>Sync status</dt>
+            <dd role="status" aria-live="polite">{syncStatusLabel}</dd>
+          </div>
+        </dl>
+        <button
+          className="simulator-reconnect"
+          type="button"
+          disabled={!offlineMode}
+          onClick={() => setOfflineMode(false)}
+        >
+          Reconnect and sync
+        </button>
+      </section>
+
       <div className="editor-container">
         <TiptapEditor
           key={docId}
           docId={docId}
           className="embedded-tiptap-editor"
+          offlineMode={offlineMode}
           onConnectionStatusChange={setConnectionStatus}
+          onOfflineEditCountChange={setOfflineEditCount}
+          onSyncStatusChange={setSyncStatus}
           renderToolbar={(editor) => (
             <>
               <button

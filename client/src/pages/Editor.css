@@ -92,6 +92,75 @@
   color: #9F1239;
 }
 
+.conflict-simulator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-xl);
+  background: var(--surface-container-low);
+  border-bottom: 1px solid var(--outline-variant);
+}
+
+.conflict-simulator-heading,
+.offline-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.conflict-simulator-heading h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.offline-mode-toggle {
+  gap: var(--space-xs);
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.conflict-simulator-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-lg);
+  margin: 0;
+}
+
+.conflict-simulator-stats div {
+  display: grid;
+  gap: 2px;
+}
+
+.conflict-simulator-stats dt {
+  color: var(--on-surface-variant);
+  font-size: 11px;
+}
+
+.conflict-simulator-stats dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.simulator-reconnect {
+  flex: 0 0 auto;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius);
+  background: var(--surface-container-lowest);
+  color: var(--on-surface);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.simulator-reconnect:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .status-dot {
   width: 6px;
   height: 6px;
@@ -104,8 +173,15 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .collaborators {
@@ -174,6 +250,14 @@
   display: flex;
   justify-content: center;
   padding: var(--space-xl);
+}
+
+@media (max-width: 760px) {
+  .conflict-simulator {
+    align-items: flex-start;
+    flex-direction: column;
+    padding-inline: var(--space-md);
+  }
 }
 
 .editor-content {
@@ -300,8 +384,13 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .spin {

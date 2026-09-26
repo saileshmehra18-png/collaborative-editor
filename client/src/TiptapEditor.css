@@ -104,6 +104,14 @@
     line-height: 1.75;
 }
 
+.editor-content .tiptap p.is-empty::before {
+    float: left;
+    height: 0;
+    color: #8b9690;
+    content: attr(data-placeholder);
+    pointer-events: none;
+}
+
 .editor-content .tiptap> :first-child {
     margin-top: 0;
 }
