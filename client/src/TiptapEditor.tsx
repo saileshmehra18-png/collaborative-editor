@@ -145,6 +145,7 @@ export default function TiptapEditor({
             Placeholder.configure({ placeholder: 'Start writing here...' }),
             ...(collaborationCaret ? [collaborationCaret] : []),
         ],
+        editable: true,
     }, [provider]);
 
     useEffect(() => {
