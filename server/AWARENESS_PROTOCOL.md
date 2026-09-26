@@ -2,7 +2,7 @@
 
 ## Overview
 
-The backend now supports Yjs Awareness protocol for real-time collaborator presence tracking. Awareness state is relayed between clients but **NOT persisted to SQLite**.
+The backend supports Yjs Awareness for real-time collaborator presence tracking. Awareness state is relayed between clients but **not persisted**; it remains in server memory while clients are connected. PostgreSQL stores durable user, document, and Yjs document-update data.
 
 ## Message Types
 
@@ -111,11 +111,12 @@ const awareness = new Map<string, awarenessProtocol.Awareness>();
 const wsToClientIds = new Map<WebSocket, Set<number>>();
 ```
 
-### Awareness State NOT Persisted
+### Awareness State Is Not Persisted
 
 - Awareness data is kept **only in memory**
 - When all clients disconnect, awareness state is lost
 - When a new client connects to an existing document, they only receive awareness of currently connected clients
+- PostgreSQL stores durable document state and metadata, not ephemeral presence
 - This is intentional - presence is ephemeral
 
 ### Client ID Tracking

@@ -22,8 +22,8 @@ router.post("/signup", async (req, res) => {
     return res.status(400).json({ error: "password must be at least 6 characters" });
   }
 
-  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
-  if (existing) {
+  const existing = await db.query("SELECT id FROM users WHERE email = $1", [email]);
+  if (existing.rowCount) {
     return res.status(409).json({ error: "email already registered" });
   }
 
@@ -31,9 +31,17 @@ router.post("/signup", async (req, res) => {
   const password_hash = await hashPassword(password);
   const now = Date.now();
 
-  db.prepare(
-    "INSERT INTO users (id, name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)"
-  ).run(id, name, email, password_hash, "user", now);
+  try {
+    await db.query(
+      "INSERT INTO users (id, name, email, password_hash, role, created_at) VALUES ($1, $2, $3, $4, $5, $6)",
+      [id, name, email, password_hash, "user", now],
+    );
+  } catch (error) {
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "23505") {
+      return res.status(409).json({ error: "email already registered" });
+    }
+    throw error;
+  }
 
   const token = signToken({ id, role: "user" });
   res.status(201).json({ token, user: { id, name, email, role: "user" } });
@@ -46,7 +54,14 @@ router.post("/login", async (req, res) => {
     return res.status(400).json({ error: "email and password are required" });
   }
 
-  const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email) as any;
+  const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+  const user = result.rows[0] as {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    password_hash: string;
+  } | undefined;
   if (!user || !user.password_hash) {
     return res.status(401).json({ error: "invalid credentials" });
   }

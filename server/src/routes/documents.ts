@@ -6,17 +6,24 @@ import { requireAuth } from "../middleware/auth";
 const router = Router();
 router.use(requireAuth);
 
-router.get("/", (_req, res) => {
-  const docs = db.prepare("SELECT id, title, updated_at FROM documents ORDER BY updated_at DESC").all();
-  res.json(docs);
+router.get("/", async (_req, res) => {
+  const result = await db.query<{ id: string; title: string; updated_at: string }>(
+    "SELECT id, title, updated_at FROM documents ORDER BY updated_at DESC",
+  );
+  res.json(result.rows.map((document) => ({
+    ...document,
+    updated_at: Number(document.updated_at),
+  })));
 });
 
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   const id = nanoid();
   const now = Date.now();
   const title = req.body?.title ?? "Untitled";
-  db.prepare("INSERT INTO documents (id, title, created_at, updated_at) VALUES (?, ?, ?, ?)")
-    .run(id, title, now, now);
+  await db.query(
+    "INSERT INTO documents (id, title, created_at, updated_at) VALUES ($1, $2, $3, $4)",
+    [id, title, now, now],
+  );
   res.json({ id, title });
 });
 
