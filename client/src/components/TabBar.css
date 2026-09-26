@@ -1,0 +1,130 @@
+.tab-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 0 1rem;
+  height: 3.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.tab:hover {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--text-primary);
+}
+
+.tab.active {
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--accent-primary);
+  font-weight: 600;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-primary);
+}
+
+.tab-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.tab-label {
+  line-height: 1;
+}
+
+.tab-subtitle {
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  font-weight: 400;
+  margin-left: 0.25rem;
+  padding-left: 0.5rem;
+  border-left: 1px solid rgba(99, 102, 241, 0.3);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab.active .tab-subtitle {
+  color: var(--accent-primary);
+  opacity: 0.8;
+}
+
+.tab-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.tab-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: transparent;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 0.375rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-action-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.tab-action-btn svg {
+  display: block;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tab-bar {
+    padding: 0 0.5rem;
+  }
+
+  .tab {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .tab-subtitle {
+    display: none;
+  }
+
+  .tab-icon {
+    font-size: 0.875rem;
+  }
+}
