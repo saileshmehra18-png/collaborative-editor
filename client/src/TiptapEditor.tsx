@@ -1,10 +1,13 @@
 import Collaboration from '@tiptap/extension-collaboration';
 import { useEditor, useEditorState, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import * as Y from 'yjs';
+import { CustomYjsWebSocketProvider } from './providers/CustomYjsWebSocketProvider';
 import './TiptapEditor.css';
+
+const DOCUMENT_ID = 'doc_7a9c3e';
 
 export type TiptapEditorProps = {
     className?: string;
@@ -42,6 +45,12 @@ function ToolbarButton({
 
 export default function TiptapEditor({ className }: TiptapEditorProps) {
     const [ydoc] = useState(() => new Y.Doc());
+
+    useEffect(() => {
+        const provider = new CustomYjsWebSocketProvider(ydoc, DOCUMENT_ID);
+        return () => provider.destroy();
+    }, [ydoc]);
+
     const editor = useEditor({
         extensions: [
             StarterKit.configure({ undoRedo: false }),
