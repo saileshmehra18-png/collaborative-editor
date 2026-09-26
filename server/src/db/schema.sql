@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS doc_snapshots (
 CREATE TABLE IF NOT EXISTS doc_updates (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   doc_id TEXT NOT NULL,
-  update BLOB NOT NULL,
+  update_data BLOB NOT NULL,
   origin TEXT,
   created_at INTEGER NOT NULL,
   FOREIGN KEY (doc_id) REFERENCES documents(id)
