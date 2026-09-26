@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
+import { login, register } from './authApi';
+import { storeAuthSession } from './authStorage';
 import './AuthPages.css';
 
 type AuthFrameProps = {
@@ -72,10 +74,26 @@ function AuthField({
 
 export function LoginPage() {
     const [message, setMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        setMessage('Login will be connected to the authentication API.');
+        setMessage('');
+        setIsLoading(true);
+
+        const formData = new FormData(event.currentTarget);
+        try {
+            const session = await login({
+                email: String(formData.get('email')).trim(),
+                password: String(formData.get('password')),
+            });
+            storeAuthSession(session);
+            window.location.assign('/');
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : 'Login failed. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
@@ -92,8 +110,8 @@ export function LoginPage() {
                     type="password"
                     autoComplete="current-password"
                 />
-                <button className="auth-submit" type="submit">
-                    Log in
+                <button className="auth-submit" type="submit" disabled={isLoading}>
+                    {isLoading ? 'Logging in...' : 'Log in'}
                 </button>
                 {message && <p className="auth-message" role="status">{message}</p>}
             </form>
@@ -103,17 +121,32 @@ export function LoginPage() {
 
 export function SignUpPage() {
     const [message, setMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
+        setMessage('');
 
         if (formData.get('password') !== formData.get('confirmPassword')) {
             setMessage('Passwords do not match.');
             return;
         }
 
-        setMessage('Sign up will be connected to the authentication API.');
+        setIsLoading(true);
+        try {
+            const session = await register({
+                name: String(formData.get('name')).trim(),
+                email: String(formData.get('email')).trim(),
+                password: String(formData.get('password')),
+            });
+            storeAuthSession(session);
+            window.location.assign('/');
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : 'Sign up failed. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
@@ -137,8 +170,8 @@ export function SignUpPage() {
                     type="password"
                     autoComplete="new-password"
                 />
-                <button className="auth-submit" type="submit">
-                    Create account
+                <button className="auth-submit" type="submit" disabled={isLoading}>
+                    {isLoading ? 'Creating account...' : 'Create account'}
                 </button>
                 {message && <p className="auth-message" role="status">{message}</p>}
             </form>

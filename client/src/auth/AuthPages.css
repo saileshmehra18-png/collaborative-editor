@@ -74,6 +74,11 @@
     background: #214f40;
 }
 
+.auth-submit:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
 .auth-message {
     margin: 0;
     color: var(--muted);
