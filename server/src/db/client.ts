@@ -11,6 +11,6 @@ export async function initializeDatabase(): Promise<void> {
     throw new Error("DATABASE_URL must be configured");
   }
 
-  const schema = fs.readFileSync(path.join(__dirname, "schema.sql"), "utf-8");
+  const schema = fs.readFileSync(path.join(__dirname, "schema.sql"), "utf-8").replace(/^\uFEFF/, "");
   await db.query(schema);
 }
