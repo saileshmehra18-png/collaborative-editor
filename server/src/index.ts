@@ -1,21 +1,42 @@
-﻿import express from "express";
+import "dotenv/config";
+import express from "express";
 import cors from "cors";
 import http from "http";
-import dotenv from "dotenv";
+import path from "path";
 import { attachWsServer } from "./ws/server";
 import documentsRouter from "./routes/documents";
 import authRouter from "./routes/auth";
+import { assertAuthConfig } from "./services/auth";
 
-dotenv.config();
+assertAuthConfig();
 
 const app = express();
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ORIGIN ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
+app.use(cors({
+  origin: allowedOrigins.length > 0 ? allowedOrigins : false,
+}));
 app.use(express.json());
 app.use("/api/auth", authRouter);
 app.use("/api/documents", documentsRouter);
+app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
+
+// Serve client static files in production
+const clientDist = path.join(__dirname, "../../client/dist");
+app.use(express.static(clientDist));
+
+// SPA fallback: serve index.html for all non-API GET requests (client-side routing)
+app.use((req, res, next) => {
+  if (req.method === "GET" && !req.path.startsWith("/api")) {
+    return res.sendFile(path.join(clientDist, "index.html"));
+  }
+  next();
+});
 
 const server = http.createServer(app);
 attachWsServer(server);
 
-const PORT = process.env.PORT ?? 4000;
+const PORT = Number(process.env.PORT ?? 4000);
+if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
+  throw new Error("PORT must be a valid TCP port number");
+}
 server.listen(PORT, () => console.log(`Backend running on :${PORT}`));

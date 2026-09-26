@@ -11,6 +11,7 @@ import {
   WifiOff,
 } from 'lucide-react'
 import TiptapEditor from '../TiptapEditor'
+import { getAuthSession } from '../auth/authStorage'
 import type { ProviderStatus } from '../providers/CustomYjsWebSocketProvider'
 import './Editor.css'
 
@@ -25,7 +26,10 @@ function Editor() {
     if (!docId) return
 
     let isCurrent = true
-    fetch('/api/documents')
+    const token = getAuthSession()?.token
+    fetch('/api/documents', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
       .then(async (response) => {
         if (!response.ok) throw new Error('Failed to load documents')
         return response.json() as Promise<Array<{ id: string; title: string }>>

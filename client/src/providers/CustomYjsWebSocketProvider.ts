@@ -53,7 +53,8 @@ export class CustomYjsWebSocketProvider {
             return;
         }
 
-        const endpoint = new URL('ws://localhost:4000/');
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const endpoint = new URL(`${wsProtocol}//${window.location.host}/ws`);
         endpoint.searchParams.set('docId', docId);
         endpoint.searchParams.set('token', token);
         this.ws = new WebSocket(endpoint);

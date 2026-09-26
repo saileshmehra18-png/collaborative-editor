@@ -1,8 +1,10 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import { db } from "../db/client";
 import { nanoid } from "nanoid";
+import { requireAuth } from "../middleware/auth";
 
 const router = Router();
+router.use(requireAuth);
 
 router.get("/", (_req, res) => {
   const docs = db.prepare("SELECT id, title, updated_at FROM documents ORDER BY updated_at DESC").all();

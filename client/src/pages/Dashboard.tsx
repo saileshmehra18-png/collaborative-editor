@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileText, Plus, Search } from 'lucide-react'
+import { getAuthSession } from '../auth/authStorage'
 import './Dashboard.css'
 
 interface Document {
@@ -22,7 +23,10 @@ function Dashboard() {
 
   async function loadDocuments() {
     try {
-      const res = await fetch('/api/documents')
+      const token = getAuthSession()?.token
+      const res = await fetch('/api/documents', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
       const data = await res.json()
       setDocuments(data)
     } catch (error) {
@@ -34,9 +38,13 @@ function Dashboard() {
 
   async function createDocument() {
     try {
+      const token = getAuthSession()?.token
       const res = await fetch('/api/documents', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ title: newDocTitle || 'Untitled' })
       })
 

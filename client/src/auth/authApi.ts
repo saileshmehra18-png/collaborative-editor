@@ -21,10 +21,10 @@ type LoginCredentials = {
     password: string;
 };
 
-const AUTH_API_URL = 'http://localhost:4000/api/auth';
+const AUTH_API_URL = '/api/auth';
 
 async function postAuthRequest(
-    endpoint: 'register' | 'login',
+    endpoint: 'signup' | 'login',
     credentials: RegisterCredentials | LoginCredentials,
 ): Promise<AuthResponse> {
     let response: Response;
@@ -75,7 +75,7 @@ async function postAuthRequest(
 }
 
 export function register(credentials: RegisterCredentials): Promise<AuthResponse> {
-    return postAuthRequest('register', credentials);
+    return postAuthRequest('signup', credentials);
 }
 
 export function login(credentials: LoginCredentials): Promise<AuthResponse> {

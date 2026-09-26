@@ -1,7 +1,8 @@
-﻿import { WebSocketServer, WebSocket } from "ws";
+import { WebSocketServer, WebSocket } from "ws";
 import * as Y from "yjs";
 import * as awarenessProtocol from "y-protocols/awareness";
 import { loadDocState, saveUpdate } from "../services/persistence";
+import { verifyToken } from "../services/auth";
 
 const docs = new Map<string, Y.Doc>();
 const conns = new Map<string, Set<WebSocket>>();
@@ -68,14 +69,21 @@ function broadcastAwareness(docId: string, changedClients: number[], origin: any
 }
 
 export function attachWsServer(server: any) {
-  const wss = new WebSocketServer({ server });
+  const wss = new WebSocketServer({ server, path: "/ws", maxPayload: 1_000_000 });
 
   wss.on("connection", (ws: WebSocket, req) => {
     const url = new URL(req.url ?? "", "http://localhost");
     const docId = url.searchParams.get("docId");
+    const token = url.searchParams.get("token");
 
-    if (!docId) {
-      ws.close(1008, "docId required");
+    if (!docId || !token) {
+      ws.close(1008, "docId and token required");
+      return;
+    }
+    try {
+      verifyToken(token);
+    } catch {
+      ws.close(1008, "invalid or expired token");
       return;
     }
 
@@ -100,7 +108,13 @@ export function attachWsServer(server: any) {
     }
 
     ws.on("message", (raw: Buffer) => {
-      const msg = JSON.parse(raw.toString());
+      let msg: any;
+      try {
+        msg = JSON.parse(raw.toString());
+      } catch {
+        ws.close(1007, "invalid message");
+        return;
+      }
       
       if (msg.type === "update") {
         const update = new Uint8Array(msg.update);

@@ -2,7 +2,7 @@
 import fs from "fs";
 import path from "path";
 
-const DB_PATH = path.join(__dirname, "../../data/app.db");
+const DB_PATH = path.resolve(process.env.DATABASE_PATH ?? path.join(__dirname, "../../data/app.db"));
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
 export const db = new Database(DB_PATH);
