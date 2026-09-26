@@ -1,0 +1,199 @@
+.auth-page {
+    --ink: #202b27;
+    --muted: #718079;
+    --line: #dce2dc;
+    --green: #28634f;
+    --green-wash: #e8f0eb;
+    --paper: #fff;
+
+    min-height: 100vh;
+    color: var(--ink);
+    background-color: #f5f6f2;
+    background-image:
+        linear-gradient(rgb(40 99 79 / 2.5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(40 99 79 / 2.5%) 1px, transparent 1px);
+    background-size: 32px 32px;
+    font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+}
+
+.auth-page .topbar {
+    display: flex;
+    min-height: 68px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 clamp(20px, 5vw, 72px);
+    border-bottom: 1px solid var(--line);
+    background: rgb(255 255 255 / 92%);
+}
+
+.auth-page .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.auth-page .brand-mark {
+    display: grid;
+    width: 30px;
+    aspect-ratio: 1;
+    place-items: center;
+    border-radius: 8px;
+    background: var(--green);
+    color: white;
+    font-family: Georgia, serif;
+    font-size: 19px;
+}
+
+.auth-page .eyebrow {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.auth-page h1 {
+    margin: 0;
+    color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 30px;
+    font-weight: 400;
+}
+
+.auth-main {
+    width: min(100% - 36px, 440px);
+    margin: clamp(44px, 9vh, 88px) auto 64px;
+}
+
+.auth-heading {
+    margin-bottom: 24px;
+}
+
+.auth-heading .eyebrow {
+    margin-bottom: 10px;
+}
+
+.auth-description {
+    margin: 12px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.auth-panel {
+    padding: 28px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--paper);
+    box-shadow: 0 12px 36px rgb(28 47 38 / 4%);
+}
+
+.auth-form {
+    display: grid;
+    gap: 18px;
+}
+
+.auth-field {
+    display: grid;
+    gap: 7px;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.auth-field input {
+    width: 100%;
+    min-height: 43px;
+    padding: 9px 11px;
+    border: 1px solid #cfd8d1;
+    border-radius: 3px;
+    background: white;
+    color: var(--ink);
+    font: inherit;
+    font-weight: 400;
+}
+
+.auth-field input:focus {
+    border-color: var(--green);
+    outline: 2px solid rgb(40 99 79 / 15%);
+    outline-offset: 1px;
+}
+
+.auth-submit {
+    min-height: 44px;
+    margin-top: 3px;
+    border: 1px solid var(--green);
+    border-radius: 3px;
+    background: var(--green);
+    color: white;
+    cursor: pointer;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.auth-submit:hover {
+    background: #214f40;
+}
+
+.auth-submit:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
+.auth-message {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.auth-switch {
+    margin: 20px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+}
+
+.auth-switch a,
+.auth-nav-link {
+    color: var(--green);
+    font-weight: 650;
+}
+
+.auth-switch a:hover,
+.auth-nav-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.auth-nav-link {
+    font-size: 13px;
+}
+
+@media (max-width: 520px) {
+    .auth-page .topbar {
+        min-height: 60px;
+        padding-inline: 18px;
+    }
+
+    .auth-page .brand {
+        gap: 8px;
+        font-size: 13px;
+    }
+
+    .auth-page .brand-mark {
+        width: 28px;
+    }
+
+    .auth-main {
+        width: calc(100% - 32px);
+        margin-top: 48px;
+    }
+
+    .auth-panel {
+        padding: 22px 18px;
+    }
+}
