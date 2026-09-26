@@ -11,6 +11,7 @@ import * as Y from 'yjs';
 import { getAuthSession } from './auth/authStorage';
 import {
     CustomYjsWebSocketProvider,
+    type ProviderDiagnostics,
     type ProviderStatus,
     type ProviderSyncStatus,
 } from './providers/CustomYjsWebSocketProvider';
@@ -49,12 +50,27 @@ export type TiptapEditorProps = {
     docId?: string;
     offlineMode?: boolean;
     onConnectionStatusChange?: (status: ProviderStatus) => void;
+    onDiagnosticsChange?: (diagnostics: EditorDiagnostics) => void;
     onDocumentTextChange?: (text: string) => void;
     restoreRequest?: { id: number; content: JSONContent } | null;
     onRestoreApplied?: (id: number) => void;
     onOfflineEditCountChange?: (count: number) => void;
     onSyncStatusChange?: (status: ProviderSyncStatus) => void;
     renderToolbar?: (editor: TiptapEditorInstance | null) => ReactNode;
+};
+
+export type EditorDiagnostics = {
+    documentClientId: number;
+    stateVectorBytes: number;
+    stateVector: Array<{ clientId: number; clock: number }>;
+    awarenessClients: Array<{
+        clientId: number;
+        name: string | null;
+        color: string | null;
+        isLocal: boolean;
+    }>;
+    collaborationCaretInstalled: boolean;
+    provider: ProviderDiagnostics;
 };
 
 type ToolbarButtonProps = {
@@ -92,6 +108,7 @@ export default function TiptapEditor({
     docId = DOCUMENT_ID,
     offlineMode = false,
     onConnectionStatusChange,
+    onDiagnosticsChange,
     onDocumentTextChange,
     restoreRequest,
     onRestoreApplied,
@@ -118,6 +135,7 @@ export default function TiptapEditor({
         setProvider(activeProvider);
         return () => {
             activeProvider.onStatusChange = undefined;
+            activeProvider.onDiagnosticsChange = undefined;
             activeProvider.onOfflineEditCountChange = undefined;
             activeProvider.onSyncStatusChange = undefined;
             activeProvider.destroy();
@@ -137,6 +155,7 @@ export default function TiptapEditor({
             },
         })
         : null;
+    const collaborationCaretInstalled = collaborationCaret !== null;
 
     const editor = useEditor({
         extensions: [
@@ -147,6 +166,48 @@ export default function TiptapEditor({
         ],
         editable: true,
     }, [provider]);
+
+    useEffect(() => {
+        if (!provider) {
+            return;
+        }
+
+        const reportDiagnostics = (): void => {
+            const encodedStateVector = Y.encodeStateVector(ydoc);
+            const stateVector = Array.from(
+                Y.decodeStateVector(encodedStateVector),
+                ([clientId, clock]) => ({ clientId, clock }),
+            );
+            const awarenessClients = Array.from(provider.awareness.getStates(), ([clientId, state]) => ({
+                clientId,
+                name: typeof state.user?.name === 'string' ? state.user.name : null,
+                color: typeof state.user?.color === 'string' ? state.user.color : null,
+                isLocal: clientId === provider.awareness.clientID,
+            }));
+
+            onDiagnosticsChange?.({
+                documentClientId: ydoc.clientID,
+                stateVectorBytes: encodedStateVector.byteLength,
+                stateVector,
+                awarenessClients,
+                collaborationCaretInstalled,
+                provider: provider.getDiagnosticsSnapshot(),
+            });
+        };
+
+        provider.onDiagnosticsChange = reportDiagnostics;
+        provider.awareness.on('update', reportDiagnostics);
+        ydoc.on('update', reportDiagnostics);
+        reportDiagnostics();
+
+        return () => {
+            if (provider.onDiagnosticsChange === reportDiagnostics) {
+                provider.onDiagnosticsChange = undefined;
+            }
+            provider.awareness.off('update', reportDiagnostics);
+            ydoc.off('update', reportDiagnostics);
+        };
+    }, [collaborationCaretInstalled, onDiagnosticsChange, provider, ydoc]);
 
     useEffect(() => {
         if (!editor) {

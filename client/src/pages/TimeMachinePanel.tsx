@@ -16,7 +16,7 @@ type HistoryCheckpoint = {
     state: number[];
 };
 
-type HistorySession = {
+export type HistorySession = {
     id: string;
     documentId: string;
     userId: string | null;
@@ -32,6 +32,7 @@ type TimeMachinePanelProps = {
     docId: string;
     currentText: string | null;
     onRestore: (content: JSONContent) => void;
+    onSessionsChange?: (sessions: HistorySession[]) => void;
 };
 
 function getAuthorLabel(session: HistorySession): string {
@@ -137,7 +138,12 @@ function HistoricalPreview({
     );
 }
 
-export default function TimeMachinePanel({ docId, currentText, onRestore }: TimeMachinePanelProps) {
+export default function TimeMachinePanel({
+    docId,
+    currentText,
+    onRestore,
+    onSessionsChange,
+}: TimeMachinePanelProps) {
     const [sessions, setSessions] = useState<HistorySession[]>([]);
     const [selectedCheckpointVersion, setSelectedCheckpointVersion] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -160,6 +166,7 @@ export default function TimeMachinePanel({ docId, currentText, onRestore }: Time
             })
             .then((history) => {
                 setSessions(history);
+                onSessionsChange?.(history);
                 const allCheckpoints = history.flatMap((session) => session.checkpoints);
                 setSelectedCheckpointVersion((current) =>
                     allCheckpoints.some((checkpoint) => checkpoint.version === current)
@@ -177,7 +184,7 @@ export default function TimeMachinePanel({ docId, currentText, onRestore }: Time
             });
 
         return () => controller.abort();
-    }, [docId, refreshCount]);
+    }, [docId, onSessionsChange, refreshCount]);
 
     const selectedSession = sessions.find((session) =>
         session.checkpoints.some((checkpoint) => checkpoint.version === selectedCheckpointVersion),

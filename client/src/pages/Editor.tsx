@@ -12,8 +12,12 @@ import {
 } from 'lucide-react'
 import TiptapEditor from '../TiptapEditor'
 import TimeMachinePanel from './TimeMachinePanel'
+import DiagnosticsPanel from './DiagnosticsPanel'
 import { getAuthSession } from '../auth/authStorage'
+import type { AuthUser } from '../auth/authApi'
 import type { JSONContent } from '@tiptap/core'
+import type { EditorDiagnostics } from '../TiptapEditor'
+import type { HistorySession } from './TimeMachinePanel'
 import type {
   ProviderStatus,
   ProviderSyncStatus,
@@ -30,6 +34,9 @@ function Editor() {
   const [offlineEditCount, setOfflineEditCount] = useState(0)
   const [syncStatus, setSyncStatus] = useState<ProviderSyncStatus>('idle')
   const [currentDocumentText, setCurrentDocumentText] = useState<string | null>(null)
+  const [currentUser] = useState<AuthUser | null>(() => getAuthSession()?.user ?? null)
+  const [editorDiagnostics, setEditorDiagnostics] = useState<EditorDiagnostics | null>(null)
+  const [historySessions, setHistorySessions] = useState<HistorySession[]>([])
   const [restoreRequest, setRestoreRequest] = useState<{ id: number; content: JSONContent } | null>(null)
   const nextRestoreId = useRef(0)
 
@@ -175,6 +182,12 @@ function Editor() {
         docId={docId}
         currentText={currentDocumentText}
         onRestore={requestRestore}
+        onSessionsChange={setHistorySessions}
+      />
+      <DiagnosticsPanel
+        user={currentUser}
+        diagnostics={editorDiagnostics}
+        sessions={historySessions}
       />
 
       <div className="editor-container">
@@ -184,6 +197,7 @@ function Editor() {
           className="embedded-tiptap-editor"
           offlineMode={offlineMode}
           onConnectionStatusChange={setConnectionStatus}
+          onDiagnosticsChange={setEditorDiagnostics}
           onDocumentTextChange={setCurrentDocumentText}
           restoreRequest={restoreRequest}
           onRestoreApplied={handleRestoreApplied}

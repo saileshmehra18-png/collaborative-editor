@@ -8,6 +8,16 @@ import { getAuthSession } from '../auth/authStorage';
 
 export type ProviderStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 export type ProviderSyncStatus = 'idle' | 'offline' | 'syncing' | 'synced';
+export type ProviderDiagnostics = {
+    status: ProviderStatus;
+    syncStatus: ProviderSyncStatus;
+    offlineMode: boolean;
+    webSocketReadyState: number | null;
+    reconnectAttempt: number;
+    pendingAcknowledgements: number;
+    lastAcknowledgedUpdateId: number | null;
+    lastAcknowledgedAt: number | null;
+};
 
 type ProviderMessage =
     | { type: 'sync' | 'update' | 'awareness'; update: number[] }
@@ -39,6 +49,7 @@ export class CustomYjsWebSocketProvider {
     onStatusChange?: (status: ProviderStatus) => void;
     onOfflineEditCountChange?: (count: number) => void;
     onSyncStatusChange?: (status: ProviderSyncStatus) => void;
+    onDiagnosticsChange?: () => void;
     syncStatus: ProviderSyncStatus = 'idle';
     offlineMode = false;
     offlineEditCount = 0;
@@ -50,6 +61,8 @@ export class CustomYjsWebSocketProvider {
     private reconnectAttempt = 0;
     private nextUpdateId = 0;
     private readonly pendingUpdateIds = new Set<number>();
+    private lastAcknowledgedUpdateId: number | null = null;
+    private lastAcknowledgedAt: number | null = null;
 
     constructor(
         private readonly doc: Y.Doc,
@@ -87,6 +100,7 @@ export class CustomYjsWebSocketProvider {
 
         this.offlineMode = offlineMode;
         this.pendingUpdateIds.clear();
+        this.notifyDiagnosticsChange();
 
         if (offlineMode) {
             if (this.reconnectTimer !== null) {
@@ -144,6 +158,20 @@ export class CustomYjsWebSocketProvider {
         }
 
         this.setStatus('disconnected');
+        this.notifyDiagnosticsChange();
+    }
+
+    getDiagnosticsSnapshot(): ProviderDiagnostics {
+        return {
+            status: this.status,
+            syncStatus: this.syncStatus,
+            offlineMode: this.offlineMode,
+            webSocketReadyState: this.ws?.readyState ?? null,
+            reconnectAttempt: this.reconnectAttempt,
+            pendingAcknowledgements: this.pendingUpdateIds.size,
+            lastAcknowledgedUpdateId: this.lastAcknowledgedUpdateId,
+            lastAcknowledgedAt: this.lastAcknowledgedAt,
+        };
     }
 
     private readonly handleDocumentUpdate = (update: Uint8Array, origin: unknown): void => {
@@ -166,6 +194,7 @@ export class CustomYjsWebSocketProvider {
         }
 
         this.reconnectAttempt = 0;
+        this.notifyDiagnosticsChange();
         this.setStatus('connected');
         this.setSyncStatus('syncing');
         this.sendUpdate(Y.encodeStateAsUpdate(this.doc));
@@ -187,6 +216,11 @@ export class CustomYjsWebSocketProvider {
 
             if (message.type === 'ack') {
                 const acknowledged = this.pendingUpdateIds.delete(message.id);
+                if (acknowledged) {
+                    this.lastAcknowledgedUpdateId = message.id;
+                    this.lastAcknowledgedAt = Date.now();
+                    this.notifyDiagnosticsChange();
+                }
                 if (
                     acknowledged &&
                     this.pendingUpdateIds.size === 0 &&
@@ -223,6 +257,7 @@ export class CustomYjsWebSocketProvider {
         this.pendingUpdateIds.clear();
         this.setStatus('disconnected');
         this.setSyncStatus('idle');
+        this.notifyDiagnosticsChange();
         this.scheduleReconnect();
     };
 
@@ -252,6 +287,7 @@ export class CustomYjsWebSocketProvider {
             this.ws.addEventListener('message', this.handleMessage);
             this.ws.addEventListener('close', this.handleClose);
             this.ws.addEventListener('error', this.handleError);
+            this.notifyDiagnosticsChange();
         } catch {
             this.ws = null;
             this.setStatus('error');
@@ -266,6 +302,7 @@ export class CustomYjsWebSocketProvider {
 
         const delay = Math.min(1000 * 2 ** this.reconnectAttempt, 30_000);
         this.reconnectAttempt = Math.min(this.reconnectAttempt + 1, 5);
+        this.notifyDiagnosticsChange();
         this.reconnectTimer = setTimeout(() => {
             this.reconnectTimer = null;
             if (this.destroyed) {
@@ -289,6 +326,7 @@ export class CustomYjsWebSocketProvider {
 
         const id = ++this.nextUpdateId;
         this.pendingUpdateIds.add(id);
+        this.notifyDiagnosticsChange();
         this.setSyncStatus('syncing');
         this.ws.send(
             JSON.stringify({
@@ -350,6 +388,7 @@ export class CustomYjsWebSocketProvider {
 
         this.status = status;
         this.onStatusChange?.(status);
+        this.notifyDiagnosticsChange();
     }
 
     private setSyncStatus(status: ProviderSyncStatus): void {
@@ -359,5 +398,10 @@ export class CustomYjsWebSocketProvider {
 
         this.syncStatus = status;
         this.onSyncStatusChange?.(status);
+        this.notifyDiagnosticsChange();
+    }
+
+    private notifyDiagnosticsChange(): void {
+        this.onDiagnosticsChange?.();
     }
 }
