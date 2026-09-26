@@ -1,0 +1,114 @@
+.diagnostics-panel {
+    margin: 0 var(--space-xl) var(--space-md);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius);
+    background: var(--surface-container-lowest);
+}
+
+.diagnostics-panel>summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.diagnostics-panel-summary,
+.diagnostics-note {
+    color: var(--on-surface-variant);
+    font-size: 11px;
+    font-weight: 400;
+}
+
+.diagnostics-content {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-md);
+    max-height: 520px;
+    overflow: auto;
+    padding: var(--space-md);
+    border-top: 1px solid var(--outline-variant);
+}
+
+.diagnostics-section {
+    min-width: 0;
+    padding: var(--space-sm);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-sm);
+}
+
+.diagnostics-section h3 {
+    margin: 0 0 var(--space-sm);
+    font-size: 12px;
+}
+
+.diagnostics-section p,
+.diagnostics-section li {
+    overflow-wrap: anywhere;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.diagnostics-section dl {
+    display: grid;
+    gap: 5px;
+    margin: 0;
+}
+
+.diagnostics-section dl div {
+    display: grid;
+    grid-template-columns: minmax(100px, 1fr) minmax(0, 1.2fr);
+    gap: var(--space-sm);
+}
+
+.diagnostics-section dt {
+    color: var(--on-surface-variant);
+    font-size: 11px;
+}
+
+.diagnostics-section dd {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.diagnostics-section ul {
+    display: grid;
+    gap: 4px;
+    margin: var(--space-xs) 0 0;
+    padding-left: var(--space-lg);
+}
+
+.diagnostics-section li span {
+    display: block;
+    color: var(--on-surface-variant);
+    font-size: 10px;
+}
+
+.diagnostics-provenance>ul {
+    max-height: 230px;
+    overflow: auto;
+}
+
+.diagnostics-provenance>ul>li>strong,
+.diagnostics-provenance>ul>li>span {
+    display: block;
+}
+
+@media (max-width: 760px) {
+    .diagnostics-panel {
+        margin-inline: var(--space-md);
+    }
+
+    .diagnostics-content {
+        grid-template-columns: 1fr;
+    }
+
+    .diagnostics-panel>summary {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

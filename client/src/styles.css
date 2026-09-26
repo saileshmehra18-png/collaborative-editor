@@ -1,0 +1,138 @@
+:root {
+    font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+    color: #202b27;
+    background: #f5f6f2;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    --ink: #202b27;
+    --muted: #718079;
+    --line: #dce2dc;
+    --green: #28634f;
+    --green-wash: #e8f0eb;
+    --paper: #fff;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    background-image:
+        linear-gradient(rgb(40 99 79 / 2.5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(40 99 79 / 2.5%) 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.app-shell {
+    min-height: 100vh;
+}
+
+.topbar {
+    display: flex;
+    min-height: 68px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 clamp(20px, 5vw, 72px);
+    border-bottom: 1px solid var(--line);
+    background: rgb(255 255 255 / 92%);
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.brand-mark {
+    display: grid;
+    width: 30px;
+    aspect-ratio: 1;
+    place-items: center;
+    border-radius: 8px;
+    background: var(--green);
+    color: white;
+    font-family: Georgia, serif;
+    font-size: 19px;
+}
+
+.client-tag,
+.eyebrow {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.client-tag {
+    padding: 6px 8px;
+    border: 1px solid #d5e2d9;
+    border-radius: 4px;
+    background: var(--green-wash);
+    color: var(--green);
+}
+
+.workspace {
+    width: min(100% - 40px, 920px);
+    margin: clamp(42px, 8vh, 84px) auto 64px;
+}
+
+.document-heading {
+    margin-bottom: 22px;
+}
+
+.eyebrow {
+    margin: 0 0 10px;
+}
+
+h1 {
+    margin: 0;
+    color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 30px;
+    font-weight: 400;
+}
+
+.document-surface {
+    min-height: min(58vh, 620px);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--paper);
+    box-shadow: 0 12px 36px rgb(28 47 38 / 4%);
+}
+
+@media (max-width: 520px) {
+    .topbar {
+        min-height: 60px;
+        padding-inline: 18px;
+    }
+
+    .brand {
+        gap: 8px;
+        font-size: 13px;
+    }
+
+    .brand-mark {
+        width: 28px;
+    }
+
+    .workspace {
+        width: calc(100% - 32px);
+    }
+
+    h1 {
+        font-size: 26px;
+    }
+}

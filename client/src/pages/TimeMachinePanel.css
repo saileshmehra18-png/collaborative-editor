@@ -1,0 +1,226 @@
+.time-machine-panel {
+    margin: 0 var(--space-xl) var(--space-md);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius);
+    background: var(--surface-container-lowest);
+}
+
+.time-machine-panel>summary {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-sm) var(--space-md);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.time-machine-session-list {
+    border-top: 1px solid var(--outline-variant);
+}
+
+.time-machine-session {
+    border-bottom: 1px solid var(--outline-variant);
+}
+
+.time-machine-session>summary {
+    display: grid;
+    grid-template-columns: minmax(120px, 1fr) minmax(150px, 1.4fr) auto;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.time-machine-session>summary span {
+    color: var(--on-surface-variant);
+    font-size: 11px;
+}
+
+.time-machine-count,
+.time-machine-version-info span {
+    color: var(--on-surface-variant);
+    font-size: 11px;
+    font-weight: 400;
+}
+
+.time-machine-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    padding: 0 var(--space-md) var(--space-sm);
+    color: var(--on-surface-variant);
+    font-size: 11px;
+}
+
+.time-machine-toolbar button {
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-sm);
+    background: var(--surface-container-lowest);
+    color: var(--on-surface);
+    cursor: pointer;
+    font: inherit;
+}
+
+.time-machine-toolbar button:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.time-machine-message {
+    margin: 0;
+    padding: var(--space-md);
+    color: var(--on-surface-variant);
+    font-size: 13px;
+}
+
+.time-machine-message.is-error {
+    color: #9F1239;
+}
+
+.time-machine-checkpoints {
+    margin: 0;
+    padding: 0 var(--space-md) var(--space-sm) var(--space-xl);
+    list-style: none;
+}
+
+.time-machine-checkpoints button {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--on-surface);
+    cursor: pointer;
+    text-align: left;
+}
+
+.time-machine-checkpoints button strong {
+    flex: 1;
+    font-size: 12px;
+}
+
+.time-machine-checkpoints button span {
+    color: var(--on-surface-variant);
+    font-size: 11px;
+}
+
+.time-machine-checkpoints button:hover,
+.time-machine-checkpoints button.is-selected {
+    border-color: var(--outline-variant);
+    background: var(--surface-container-low);
+}
+
+.time-machine-checkpoints time,
+.time-machine-version-info time {
+    font-size: 11px;
+}
+
+.time-machine-selected {
+    min-width: 0;
+    padding: var(--space-md);
+}
+
+.time-machine-version-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md) var(--space-xl);
+    margin-bottom: var(--space-sm);
+}
+
+.time-machine-version-info div {
+    display: grid;
+    gap: 3px;
+}
+
+.time-machine-version-info strong {
+    font-size: 12px;
+}
+
+.time-machine-preview {
+    max-height: 260px;
+    overflow: auto;
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+}
+
+.time-machine-preview .ProseMirror {
+    min-height: 80px;
+    outline: none;
+}
+
+.time-machine-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    margin-top: var(--space-sm);
+    color: var(--on-surface-variant);
+    font-size: 11px;
+}
+
+.time-machine-actions button {
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-sm);
+    background: var(--surface-container-lowest);
+    color: var(--on-surface);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+}
+
+.time-machine-actions button:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.time-machine-text-comparison {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-md);
+    margin-top: var(--space-sm);
+}
+
+.time-machine-text-comparison h4 {
+    margin: 0 0 var(--space-xs);
+    font-size: 11px;
+}
+
+.time-machine-text-comparison pre {
+    max-height: 110px;
+    overflow: auto;
+    margin: 0;
+    padding: var(--space-sm);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-sm);
+    background: var(--surface-container-low);
+    font: 11px/1.5 var(--font-family-mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+    .time-machine-panel {
+        margin-inline: var(--space-md);
+    }
+
+    .time-machine-session>summary {
+        grid-template-columns: 1fr;
+    }
+
+    .time-machine-text-comparison {
+        grid-template-columns: 1fr;
+    }
+
+    .time-machine-toolbar {
+        align-items: flex-start;
+    }
+}
