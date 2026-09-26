@@ -40,6 +40,17 @@ function getOrCreateDoc(docId: string): Promise<Y.Doc> {
     aw.on("update", ({ added, updated, removed }: any, origin: any) => {
       const changedClients = added.concat(updated).concat(removed);
       broadcastAwareness(docId, changedClients, origin);
+
+      if (origin instanceof WebSocket) {
+        let clientIds = wsToClientIds.get(origin);
+        if (!clientIds) {
+          clientIds = new Set();
+          wsToClientIds.set(origin, clientIds);
+        }
+
+        added.concat(updated).forEach((clientId: number) => clientIds!.add(clientId));
+        removed.forEach((clientId: number) => clientIds!.delete(clientId));
+      }
     });
 
     return ydoc;
@@ -225,22 +236,6 @@ export function attachWsServer(server: any) {
         // Apply awareness update from client
         const update = new Uint8Array(msg.update);
         awarenessProtocol.applyAwarenessUpdate(aw, update, ws);
-
-        // Track which clientIDs this WebSocket is using
-        const clients = Array.from(aw.getStates().keys());
-
-        if (!wsToClientIds.has(ws)) {
-          wsToClientIds.set(ws, new Set());
-        }
-
-        // Add all current client IDs from this awareness update
-        clients.forEach(clientId => {
-          const state = aw.getStates().get(clientId);
-          // Track this clientId as belonging to this WebSocket
-          if (state) {
-            wsToClientIds.get(ws)!.add(clientId);
-          }
-        });
       }
     });
 
