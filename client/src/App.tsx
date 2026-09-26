@@ -1,6 +1,15 @@
 import TiptapEditor from './TiptapEditor';
+import { LoginPage, SignUpPage } from './auth/AuthPages';
 
 export default function App() {
+    if (window.location.pathname === '/login') {
+        return <LoginPage />;
+    }
+
+    if (window.location.pathname === '/signup') {
+        return <SignUpPage />;
+    }
+
     return (
         <div className="app-shell">
             <header className="topbar">
