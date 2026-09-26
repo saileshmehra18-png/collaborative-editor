@@ -22,7 +22,7 @@ body {
     left: -10%;
     width: 500px;
     height: 500px;
-    background: radial-gradient(circle, rgba(99,102,241,0.4) 0%, rgba(0,0,0,0) 70%);
+    background: radial-gradient(circle, rgba(249,115,22,0.4) 0%, rgba(0,0,0,0) 70%);
     z-index: -1;
 }
 
@@ -32,7 +32,7 @@ body {
     right: -10%;
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, rgba(236,72,153,0.3) 0%, rgba(0,0,0,0) 70%);
+    background: radial-gradient(circle, rgba(251,146,60,0.3) 0%, rgba(0,0,0,0) 70%);
     z-index: -1;
 }
 
@@ -54,11 +54,11 @@ body {
 }
 
 /* Sidebar */
-.sidebar h2 { font-size: 1.2rem; margin-bottom: 15px; color: #818cf8; }
+.sidebar h2 { font-size: 1.2rem; margin-bottom: 15px; color: #fb923c; }
 .sidebar hr { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; }
 .sections-list { list-style: none; margin-top: 15px; }
 .sections-list li { padding: 10px; cursor: pointer; color: #cbd5e1; border-radius: 8px; }
-.sections-list li.active, .sections-list li:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+.sections-list li.active, .sections-list li:hover { background: rgba(249, 115, 22, 0.2); color: #fff; }
 
 /* Editor Area */
 .editor-area {
@@ -72,12 +72,16 @@ body {
     margin-bottom: 20px;
 }
 .share-btn {
-    background: #6366f1;
+    background: #f97316;
     color: white;
     border: none;
     padding: 8px 16px;
     border-radius: 8px;
     cursor: pointer;
+    transition: 0.3s;
+}
+.share-btn:hover {
+    background: #ea580c;
 }
 .document-editor {
     flex: 1;
@@ -104,7 +108,7 @@ body {
 .online-status { text-align: center; font-weight: bold; }
 .version-history { flex: 1; display: flex; flex-direction: column; }
 .history-item { margin-top: 15px; font-size: 0.9rem; }
-.history-item .time { color: #818cf8; font-weight: bold; margin-right: 10px; }
+.history-item .time { color: #fb923c; font-weight: bold; margin-right: 10px; }
 .history-item p { color: #cbd5e1; font-size: 0.85rem; margin-top: 2px; }
 .restore-btn {
     margin-top: auto;
@@ -116,4 +120,4 @@ body {
     cursor: pointer;
     transition: 0.3s;
 }
-.restore-btn:hover { background: #6366f1; }
+.restore-btn:hover { background: #f97316; }
