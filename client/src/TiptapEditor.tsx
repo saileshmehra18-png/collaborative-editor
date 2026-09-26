@@ -4,10 +4,19 @@ import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import * as Y from 'yjs';
-import { CustomYjsWebSocketProvider } from './providers/CustomYjsWebSocketProvider';
+import {
+    CustomYjsWebSocketProvider,
+    type ProviderStatus,
+} from './providers/CustomYjsWebSocketProvider';
 import './TiptapEditor.css';
 
 const DOCUMENT_ID = 'doc_7a9c3e';
+const STATUS_LABELS: Record<ProviderStatus, string> = {
+    connecting: 'Connecting',
+    connected: 'Connected',
+    disconnected: 'Disconnected',
+    error: 'Connection error',
+};
 
 export type TiptapEditorProps = {
     className?: string;
@@ -45,10 +54,18 @@ function ToolbarButton({
 
 export default function TiptapEditor({ className }: TiptapEditorProps) {
     const [ydoc] = useState(() => new Y.Doc());
+    const [connectionStatus, setConnectionStatus] = useState<ProviderStatus>('connecting');
 
     useEffect(() => {
-        const provider = new CustomYjsWebSocketProvider(ydoc, DOCUMENT_ID);
-        return () => provider.destroy();
+        const provider = new CustomYjsWebSocketProvider(
+            ydoc,
+            DOCUMENT_ID,
+            setConnectionStatus,
+        );
+        return () => {
+            provider.onStatusChange = undefined;
+            provider.destroy();
+        };
     }, [ydoc]);
 
     const editor = useEditor({
@@ -183,6 +200,13 @@ export default function TiptapEditor({ className }: TiptapEditorProps) {
                         &#8631;
                     </ToolbarButton>
                 </div>
+                <span
+                    className={`connection-status is-${connectionStatus}`}
+                    role="status"
+                    aria-live="polite"
+                >
+                    {STATUS_LABELS[connectionStatus]}
+                </span>
             </div>
             <EditorContent className="editor-content" editor={editor} />
         </section>

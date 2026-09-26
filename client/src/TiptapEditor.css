@@ -26,6 +26,36 @@
     border-right: 0;
 }
 
+.connection-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-left: auto;
+    color: #69756e;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.connection-status::before {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    content: '';
+}
+
+.connection-status.is-connected {
+    color: #28634f;
+}
+
+.connection-status.is-connecting {
+    color: #a16a12;
+}
+
+.connection-status.is-error {
+    color: #b13e3e;
+}
+
 .toolbar-button {
     display: grid;
     width: 34px;
