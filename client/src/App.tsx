@@ -1,36 +1,44 @@
-import TiptapEditor from './TiptapEditor';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import type { ReactNode } from 'react';
+import Dashboard from './pages/Dashboard';
+import Editor from './pages/Editor';
 import { LoginPage, SignUpPage } from './auth/AuthPages';
+import { getAuthSession } from './auth/authStorage';
+
+function RequireAuth({ children }: { children: ReactNode }) {
+    return getAuthSession()?.token ? children : <Navigate to="/login" replace />;
+}
 
 export default function App() {
-    if (window.location.pathname === '/login') {
-        return <LoginPage />;
-    }
-
-    if (window.location.pathname === '/signup') {
-        return <SignUpPage />;
-    }
+    const hasSession = Boolean(getAuthSession()?.token);
 
     return (
-        <div className="app-shell">
-            <header className="topbar">
-                <a className="brand" href="/" aria-label="Collaborative Editor home">
-                    <span className="brand-mark" aria-hidden="true">
-                        C
-                    </span>
-                    <span>Collaborative Editor</span>
-                </a>
-                <span className="client-tag">CLIENT</span>
-            </header>
-
-            <main className="workspace">
-                <div className="document-heading">
-                    <p className="eyebrow">DOCUMENT</p>
-                    <h1>Untitled document</h1>
-                </div>
-                <div className="document-surface">
-                    <TiptapEditor />
-                </div>
-            </main>
-        </div>
+        <BrowserRouter>
+            <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignUpPage />} />
+                <Route
+                    path="/"
+                    element={<Navigate to={hasSession ? '/documents' : '/login'} replace />}
+                />
+                <Route
+                    path="/documents"
+                    element={
+                        <RequireAuth>
+                            <Dashboard />
+                        </RequireAuth>
+                    }
+                />
+                <Route
+                    path="/documents/:docId"
+                    element={
+                        <RequireAuth>
+                            <Editor />
+                        </RequireAuth>
+                    }
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+        </BrowserRouter>
     );
 }

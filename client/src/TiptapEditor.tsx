@@ -1,6 +1,7 @@
 import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCaret from '@tiptap/extension-collaboration-caret';
 import { useEditor, useEditorState, EditorContent } from '@tiptap/react';
+import type { Editor as TiptapEditorInstance } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -42,6 +43,9 @@ const STATUS_LABELS: Record<ProviderStatus, string> = {
 
 export type TiptapEditorProps = {
     className?: string;
+    docId?: string;
+    onConnectionStatusChange?: (status: ProviderStatus) => void;
+    renderToolbar?: (editor: TiptapEditorInstance | null) => ReactNode;
 };
 
 type ToolbarButtonProps = {
@@ -74,7 +78,12 @@ function ToolbarButton({
     );
 }
 
-export default function TiptapEditor({ className }: TiptapEditorProps) {
+export default function TiptapEditor({
+    className,
+    docId = DOCUMENT_ID,
+    onConnectionStatusChange,
+    renderToolbar,
+}: TiptapEditorProps) {
     const [ydoc] = useState(() => new Y.Doc());
     const [provider, setProvider] = useState<CustomYjsWebSocketProvider | null>(null);
     const [authenticatedUser] = useState(() => getAuthSession()?.user ?? null);
@@ -83,15 +92,18 @@ export default function TiptapEditor({ className }: TiptapEditorProps) {
     useEffect(() => {
         const activeProvider = new CustomYjsWebSocketProvider(
             ydoc,
-            DOCUMENT_ID,
-            setConnectionStatus,
+            docId,
+            (status) => {
+                setConnectionStatus(status);
+                onConnectionStatusChange?.(status);
+            },
         );
         setProvider(activeProvider);
         return () => {
             activeProvider.onStatusChange = undefined;
             activeProvider.destroy();
         };
-    }, [ydoc]);
+    }, [docId, onConnectionStatusChange, ydoc]);
 
     const collaborationCaret = provider && authenticatedUser
         ? CollaborationCaret.configure({
@@ -138,112 +150,118 @@ export default function TiptapEditor({ className }: TiptapEditorProps) {
             className={className ? `tiptap-editor ${className}` : 'tiptap-editor'}
             aria-label="Rich text editor"
         >
-            <div className="editor-toolbar" role="toolbar" aria-label="Text formatting">
-                <div className="toolbar-group" aria-label="Block style">
-                    <ToolbarButton
-                        label="Paragraph"
-                        active={toolbarState.paragraph}
-                        disabled={!editor}
-                        onClick={() => editor?.chain().focus().setParagraph().run()}
-                    >
-                        P
-                    </ToolbarButton>
-                    <ToolbarButton
-                        label="Heading 1"
-                        active={toolbarState.heading1}
-                        disabled={!editor}
-                        onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
-                    >
-                        H1
-                    </ToolbarButton>
-                    <ToolbarButton
-                        label="Heading 2"
-                        active={toolbarState.heading2}
-                        disabled={!editor}
-                        onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-                    >
-                        H2
-                    </ToolbarButton>
-                    <ToolbarButton
-                        label="Heading 3"
-                        active={toolbarState.heading3}
-                        disabled={!editor}
-                        onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
-                    >
-                        H3
-                    </ToolbarButton>
+            {renderToolbar ? (
+                <div className="editor-toolbar" role="toolbar" aria-label="Text formatting">
+                    {renderToolbar(editor)}
                 </div>
+            ) : (
+                <div className="editor-toolbar" role="toolbar" aria-label="Text formatting">
+                    <div className="toolbar-group" aria-label="Block style">
+                        <ToolbarButton
+                            label="Paragraph"
+                            active={toolbarState.paragraph}
+                            disabled={!editor}
+                            onClick={() => editor?.chain().focus().setParagraph().run()}
+                        >
+                            P
+                        </ToolbarButton>
+                        <ToolbarButton
+                            label="Heading 1"
+                            active={toolbarState.heading1}
+                            disabled={!editor}
+                            onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
+                        >
+                            H1
+                        </ToolbarButton>
+                        <ToolbarButton
+                            label="Heading 2"
+                            active={toolbarState.heading2}
+                            disabled={!editor}
+                            onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+                        >
+                            H2
+                        </ToolbarButton>
+                        <ToolbarButton
+                            label="Heading 3"
+                            active={toolbarState.heading3}
+                            disabled={!editor}
+                            onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
+                        >
+                            H3
+                        </ToolbarButton>
+                    </div>
 
-                <div className="toolbar-group" aria-label="Text formatting">
-                    <ToolbarButton
-                        label="Bold"
-                        active={toolbarState.bold}
-                        disabled={!editor}
-                        onClick={() => editor?.chain().focus().toggleBold().run()}
-                    >
-                        <strong>B</strong>
-                    </ToolbarButton>
-                    <ToolbarButton
-                        label="Italic"
-                        active={toolbarState.italic}
-                        disabled={!editor}
-                        onClick={() => editor?.chain().focus().toggleItalic().run()}
-                    >
-                        <em>I</em>
-                    </ToolbarButton>
-                    <ToolbarButton
-                        label="Underline"
-                        active={toolbarState.underline}
-                        disabled={!editor}
-                        onClick={() => editor?.chain().focus().toggleUnderline().run()}
-                    >
-                        <span className="underline-icon">U</span>
-                    </ToolbarButton>
-                </div>
+                    <div className="toolbar-group" aria-label="Text formatting">
+                        <ToolbarButton
+                            label="Bold"
+                            active={toolbarState.bold}
+                            disabled={!editor}
+                            onClick={() => editor?.chain().focus().toggleBold().run()}
+                        >
+                            <strong>B</strong>
+                        </ToolbarButton>
+                        <ToolbarButton
+                            label="Italic"
+                            active={toolbarState.italic}
+                            disabled={!editor}
+                            onClick={() => editor?.chain().focus().toggleItalic().run()}
+                        >
+                            <em>I</em>
+                        </ToolbarButton>
+                        <ToolbarButton
+                            label="Underline"
+                            active={toolbarState.underline}
+                            disabled={!editor}
+                            onClick={() => editor?.chain().focus().toggleUnderline().run()}
+                        >
+                            <span className="underline-icon">U</span>
+                        </ToolbarButton>
+                    </div>
 
-                <div className="toolbar-group" aria-label="Lists">
-                    <ToolbarButton
-                        label="Bullet list"
-                        active={toolbarState.bulletList}
-                        disabled={!editor}
-                        onClick={() => editor?.chain().focus().toggleBulletList().run()}
-                    >
-                        &#8226;&#8226;&#8226;
-                    </ToolbarButton>
-                    <ToolbarButton
-                        label="Ordered list"
-                        active={toolbarState.orderedList}
-                        disabled={!editor}
-                        onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-                    >
-                        1.
-                    </ToolbarButton>
-                </div>
+                    <div className="toolbar-group" aria-label="Lists">
+                        <ToolbarButton
+                            label="Bullet list"
+                            active={toolbarState.bulletList}
+                            disabled={!editor}
+                            onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                        >
+                            &#8226;&#8226;&#8226;
+                        </ToolbarButton>
+                        <ToolbarButton
+                            label="Ordered list"
+                            active={toolbarState.orderedList}
+                            disabled={!editor}
+                            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+                        >
+                            1.
+                        </ToolbarButton>
+                    </div>
 
-                <div className="toolbar-group" aria-label="History">
-                    <ToolbarButton
-                        label="Undo"
-                        disabled={!editor || !toolbarState.canUndo}
-                        onClick={() => editor?.chain().focus().undo().run()}
+                    <div className="toolbar-group" aria-label="History">
+                        <ToolbarButton
+                            label="Undo"
+                            disabled={!editor || !toolbarState.canUndo}
+                            onClick={() => editor?.chain().focus().undo().run()}
+                        >
+                            &#8630;
+                        </ToolbarButton>
+                        <ToolbarButton
+                            label="Redo"
+                            disabled={!editor || !toolbarState.canRedo}
+                            onClick={() => editor?.chain().focus().redo().run()}
+                        >
+                            &#8631;
+                        </ToolbarButton>
+                    </div>
+                    <span
+                        className={`connection-status is-${connectionStatus}`}
+                        role="status"
+                        aria-live="polite"
                     >
-                        &#8630;
-                    </ToolbarButton>
-                    <ToolbarButton
-                        label="Redo"
-                        disabled={!editor || !toolbarState.canRedo}
-                        onClick={() => editor?.chain().focus().redo().run()}
-                    >
-                        &#8631;
-                    </ToolbarButton>
+                        {STATUS_LABELS[connectionStatus]}
+                    </span>
                 </div>
-                <span
-                    className={`connection-status is-${connectionStatus}`}
-                    role="status"
-                    aria-live="polite"
-                >
-                    {STATUS_LABELS[connectionStatus]}
-                </span>
-            </div>
+            )}
             <EditorContent className="editor-content" editor={editor} />
         </section>
     );
