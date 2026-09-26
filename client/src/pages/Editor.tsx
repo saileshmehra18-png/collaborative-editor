@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -13,6 +13,7 @@ import {
 import TiptapEditor from '../TiptapEditor'
 import TimeMachinePanel from './TimeMachinePanel'
 import { getAuthSession } from '../auth/authStorage'
+import type { JSONContent } from '@tiptap/core'
 import type {
   ProviderStatus,
   ProviderSyncStatus,
@@ -29,6 +30,15 @@ function Editor() {
   const [offlineEditCount, setOfflineEditCount] = useState(0)
   const [syncStatus, setSyncStatus] = useState<ProviderSyncStatus>('idle')
   const [currentDocumentText, setCurrentDocumentText] = useState<string | null>(null)
+  const [restoreRequest, setRestoreRequest] = useState<{ id: number; content: JSONContent } | null>(null)
+  const nextRestoreId = useRef(0)
+
+  const requestRestore = useCallback((content: JSONContent) => {
+    setRestoreRequest({ id: ++nextRestoreId.current, content })
+  }, [])
+  const handleRestoreApplied = useCallback((id: number) => {
+    setRestoreRequest((request) => request?.id === id ? null : request)
+  }, [])
 
   const syncStatusLabel = syncStatus === 'synced'
     ? 'Synchronized to server'
@@ -161,7 +171,11 @@ function Editor() {
         </button>
       </section>
 
-      <TimeMachinePanel docId={docId} currentText={currentDocumentText} />
+      <TimeMachinePanel
+        docId={docId}
+        currentText={currentDocumentText}
+        onRestore={requestRestore}
+      />
 
       <div className="editor-container">
         <TiptapEditor
@@ -171,6 +185,8 @@ function Editor() {
           offlineMode={offlineMode}
           onConnectionStatusChange={setConnectionStatus}
           onDocumentTextChange={setCurrentDocumentText}
+          restoreRequest={restoreRequest}
+          onRestoreApplied={handleRestoreApplied}
           onOfflineEditCountChange={setOfflineEditCount}
           onSyncStatusChange={setSyncStatus}
           renderToolbar={(editor) => (

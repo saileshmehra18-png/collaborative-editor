@@ -14,8 +14,30 @@
     font-weight: 600;
 }
 
+.time-machine-session-list {
+    border-top: 1px solid var(--outline-variant);
+}
+
+.time-machine-session {
+    border-bottom: 1px solid var(--outline-variant);
+}
+
+.time-machine-session>summary {
+    display: grid;
+    grid-template-columns: minmax(120px, 1fr) minmax(150px, 1.4fr) auto;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.time-machine-session>summary span {
+    color: var(--on-surface-variant);
+    font-size: 11px;
+}
+
 .time-machine-count,
-.time-machine-timeline button span,
 .time-machine-version-info span {
     color: var(--on-surface-variant);
     font-size: 11px;
@@ -58,25 +80,17 @@
     color: #9F1239;
 }
 
-.time-machine-content {
-    display: grid;
-    grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
-    border-top: 1px solid var(--outline-variant);
-}
-
-.time-machine-timeline {
-    max-height: 360px;
-    overflow-y: auto;
+.time-machine-checkpoints {
     margin: 0;
-    padding: var(--space-sm);
-    border-right: 1px solid var(--outline-variant);
+    padding: 0 var(--space-md) var(--space-sm) var(--space-xl);
     list-style: none;
 }
 
-.time-machine-timeline button {
-    display: grid;
+.time-machine-checkpoints button {
+    display: flex;
     width: 100%;
-    gap: 3px;
+    align-items: center;
+    gap: var(--space-md);
     padding: var(--space-sm);
     border: 1px solid transparent;
     border-radius: var(--radius-sm);
@@ -86,13 +100,23 @@
     text-align: left;
 }
 
-.time-machine-timeline button:hover,
-.time-machine-timeline button.is-selected {
+.time-machine-checkpoints button strong {
+    flex: 1;
+    font-size: 12px;
+}
+
+.time-machine-checkpoints button span {
+    color: var(--on-surface-variant);
+    font-size: 11px;
+}
+
+.time-machine-checkpoints button:hover,
+.time-machine-checkpoints button.is-selected {
     border-color: var(--outline-variant);
     background: var(--surface-container-low);
 }
 
-.time-machine-timeline time,
+.time-machine-checkpoints time,
 .time-machine-version-info time {
     font-size: 11px;
 }
@@ -132,6 +156,32 @@
     outline: none;
 }
 
+.time-machine-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    margin-top: var(--space-sm);
+    color: var(--on-surface-variant);
+    font-size: 11px;
+}
+
+.time-machine-actions button {
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-sm);
+    background: var(--surface-container-lowest);
+    color: var(--on-surface);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+}
+
+.time-machine-actions button:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
 .time-machine-text-comparison {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -162,20 +212,8 @@
         margin-inline: var(--space-md);
     }
 
-    .time-machine-content {
+    .time-machine-session>summary {
         grid-template-columns: 1fr;
-    }
-
-    .time-machine-timeline {
-        display: flex;
-        max-height: 180px;
-        gap: var(--space-xs);
-        border-right: 0;
-        border-bottom: 1px solid var(--outline-variant);
-    }
-
-    .time-machine-timeline li {
-        min-width: 150px;
     }
 
     .time-machine-text-comparison {

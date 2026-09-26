@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS doc_updates (
   FOREIGN KEY (doc_id) REFERENCES documents(id)
 );
 
+ALTER TABLE doc_updates ADD COLUMN IF NOT EXISTS user_id TEXT;
+
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,

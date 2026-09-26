@@ -1,4 +1,5 @@
 import Collaboration from '@tiptap/extension-collaboration';
+import type { JSONContent } from '@tiptap/core';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useState } from 'react';
@@ -6,28 +7,60 @@ import * as Y from 'yjs';
 import { getAuthSession } from '../auth/authStorage';
 import './TimeMachinePanel.css';
 
-type HistoryVersion = {
+type HistoryCheckpoint = {
     version: string;
+    label: string;
     kind: 'snapshot' | 'update';
     createdAt: number;
+    updateCount: number;
     state: number[];
+};
+
+type HistorySession = {
+    id: string;
+    documentId: string;
+    userId: string | null;
+    authorName: string | null;
+    authorStatus: 'tracked' | 'unknown' | 'not-recorded';
+    startAt: number;
+    lastActivityAt: number;
+    updateCount: number;
+    checkpoints: HistoryCheckpoint[];
 };
 
 type TimeMachinePanelProps = {
     docId: string;
     currentText: string | null;
+    onRestore: (content: JSONContent) => void;
 };
 
+function getAuthorLabel(session: HistorySession): string {
+    if (session.authorName) return session.authorName;
+    if (session.userId) return `Unknown author (${session.userId})`;
+    if (session.authorStatus === 'not-recorded') return 'Snapshot author not recorded';
+    return 'Recorded before provenance tracking';
+}
+
+function formatSessionRange(session: HistorySession): string {
+    const start = new Date(session.startAt);
+    const end = new Date(session.lastActivityAt);
+    return `${start.toLocaleDateString()} · ${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}–${end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+}
+
 function HistoricalPreview({
-    version,
+    checkpoint,
+    session,
     currentText,
+    onRestore,
 }: {
-    version: HistoryVersion;
+    checkpoint: HistoryCheckpoint;
+    session: HistorySession;
     currentText: string | null;
+    onRestore: (content: JSONContent) => void;
 }) {
     const [ydoc] = useState(() => {
         const document = new Y.Doc();
-        Y.applyUpdate(document, Uint8Array.from(version.state));
+        Y.applyUpdate(document, Uint8Array.from(checkpoint.state));
         return document;
     });
     const editor = useEditor({
@@ -47,17 +80,33 @@ function HistoricalPreview({
             ? 'No text changes from current'
             : 'Text differs from current document';
 
+    const restore = (): void => {
+        if (!editor || !window.confirm('Restore this checkpoint as a new document change? Existing history will be kept.')) {
+            return;
+        }
+
+        onRestore(editor.getJSON());
+    };
+
     return (
         <div className="time-machine-selected">
             <div className="time-machine-version-info">
                 <div>
-                    <span>Selected version</span>
-                    <strong>{version.kind === 'snapshot' ? 'Database snapshot' : 'Persisted update'}</strong>
+                    <span>Author</span>
+                    <strong>{getAuthorLabel(session)}</strong>
+                </div>
+                <div>
+                    <span>Session</span>
+                    <strong>{formatSessionRange(session)}</strong>
+                </div>
+                <div>
+                    <span>Checkpoint</span>
+                    <strong>{checkpoint.label}</strong>
                 </div>
                 <div>
                     <span>Saved</span>
-                    <time dateTime={new Date(version.createdAt).toISOString()}>
-                        {new Date(version.createdAt).toLocaleString()}
+                    <time dateTime={new Date(checkpoint.createdAt).toISOString()}>
+                        {new Date(checkpoint.createdAt).toLocaleString()}
                     </time>
                 </div>
                 <div>
@@ -67,6 +116,12 @@ function HistoricalPreview({
             </div>
             <div className="time-machine-preview" aria-label="Read-only historical document preview">
                 <EditorContent editor={editor} />
+            </div>
+            <div className="time-machine-actions">
+                <span>Preview only until restored</span>
+                <button type="button" disabled={!editor} onClick={restore}>
+                    Restore this version
+                </button>
             </div>
             <div className="time-machine-text-comparison">
                 <div>
@@ -82,9 +137,9 @@ function HistoricalPreview({
     );
 }
 
-export default function TimeMachinePanel({ docId, currentText }: TimeMachinePanelProps) {
-    const [versions, setVersions] = useState<HistoryVersion[]>([]);
-    const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
+export default function TimeMachinePanel({ docId, currentText, onRestore }: TimeMachinePanelProps) {
+    const [sessions, setSessions] = useState<HistorySession[]>([]);
+    const [selectedCheckpointVersion, setSelectedCheckpointVersion] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [refreshCount, setRefreshCount] = useState(0);
@@ -101,14 +156,15 @@ export default function TimeMachinePanel({ docId, currentText }: TimeMachinePane
         })
             .then(async (response) => {
                 if (!response.ok) throw new Error('Unable to load document history.');
-                return response.json() as Promise<HistoryVersion[]>;
+                return response.json() as Promise<HistorySession[]>;
             })
             .then((history) => {
-                setVersions(history);
-                setSelectedVersion((current) =>
-                    history.some((version) => version.version === current)
+                setSessions(history);
+                const allCheckpoints = history.flatMap((session) => session.checkpoints);
+                setSelectedCheckpointVersion((current) =>
+                    allCheckpoints.some((checkpoint) => checkpoint.version === current)
                         ? current
-                        : history[history.length - 1]?.version ?? null,
+                        : allCheckpoints[allCheckpoints.length - 1]?.version ?? null,
                 );
             })
             .catch((loadError: unknown) => {
@@ -123,16 +179,23 @@ export default function TimeMachinePanel({ docId, currentText }: TimeMachinePane
         return () => controller.abort();
     }, [docId, refreshCount]);
 
-    const selected = versions.find((version) => version.version === selectedVersion) ?? null;
+    const selectedSession = sessions.find((session) =>
+        session.checkpoints.some((checkpoint) => checkpoint.version === selectedCheckpointVersion),
+    ) ?? null;
+    const selectedCheckpoint = selectedSession?.checkpoints.find(
+        (checkpoint) => checkpoint.version === selectedCheckpointVersion,
+    ) ?? null;
 
     return (
         <details className="time-machine-panel" open>
             <summary>
                 <span>Time Machine</span>
-                <span className="time-machine-count">{versions.length} saved states</span>
+                <span className="time-machine-count">
+                    {sessions.length} sessions · {sessions.reduce((count, session) => count + session.checkpoints.length, 0)} checkpoints
+                </span>
             </summary>
             <div className="time-machine-toolbar">
-                <span>History is reconstructed from persisted Yjs states and updates.</span>
+                <span>Sessions group persisted Yjs updates; checkpoints are real saved states.</span>
                 <button type="button" disabled={loading} onClick={() => setRefreshCount((count) => count + 1)}>
                     Refresh history
                 </button>
@@ -141,36 +204,47 @@ export default function TimeMachinePanel({ docId, currentText }: TimeMachinePane
                 <p className="time-machine-message">Loading persisted document history...</p>
             ) : error ? (
                 <p className="time-machine-message is-error" role="alert">{error}</p>
-            ) : versions.length === 0 ? (
+            ) : sessions.length === 0 ? (
                 <p className="time-machine-message">No persisted document history yet.</p>
             ) : (
-                <div className="time-machine-content">
-                    <ol className="time-machine-timeline" aria-label="Chronological document history">
-                        {versions.map((version, index) => (
-                            <li key={version.version}>
-                                <button
-                                    type="button"
-                                    aria-pressed={selectedVersion === version.version}
-                                    className={selectedVersion === version.version ? 'is-selected' : ''}
-                                    onClick={() => setSelectedVersion(version.version)}
-                                >
-                                    <strong>Version {index + 1}</strong>
-                                    <time dateTime={new Date(version.createdAt).toISOString()}>
-                                        {new Date(version.createdAt).toLocaleString()}
-                                    </time>
-                                    <span>{version.kind === 'snapshot' ? 'Snapshot' : 'Update'}</span>
-                                </button>
-                            </li>
-                        ))}
-                    </ol>
-                    {selected && (
-                        <HistoricalPreview
-                            key={selected.version}
-                            version={selected}
-                            currentText={currentText}
-                        />
-                    )}
+                <div className="time-machine-session-list" aria-label="Document editing sessions">
+                    {sessions.map((session, index) => (
+                        <details className="time-machine-session" key={session.id} open={index === sessions.length - 1}>
+                            <summary>
+                                <strong>{getAuthorLabel(session)}</strong>
+                                <span>{formatSessionRange(session)}</span>
+                                <span>{session.updateCount} saved updates</span>
+                            </summary>
+                            <ol className="time-machine-checkpoints">
+                                {session.checkpoints.map((checkpoint) => (
+                                    <li key={checkpoint.version}>
+                                        <button
+                                            type="button"
+                                            aria-pressed={selectedCheckpointVersion === checkpoint.version}
+                                            className={selectedCheckpointVersion === checkpoint.version ? 'is-selected' : ''}
+                                            onClick={() => setSelectedCheckpointVersion(checkpoint.version)}
+                                        >
+                                            <strong>{checkpoint.label}</strong>
+                                            <time dateTime={new Date(checkpoint.createdAt).toISOString()}>
+                                                {new Date(checkpoint.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                            </time>
+                                            <span>{checkpoint.updateCount} updates</span>
+                                        </button>
+                                    </li>
+                                ))}
+                            </ol>
+                        </details>
+                    ))}
                 </div>
+            )}
+            {selectedCheckpoint && selectedSession && (
+                <HistoricalPreview
+                    key={selectedCheckpoint.version}
+                    checkpoint={selectedCheckpoint}
+                    session={selectedSession}
+                    currentText={currentText}
+                    onRestore={onRestore}
+                />
             )}
         </details>
     );

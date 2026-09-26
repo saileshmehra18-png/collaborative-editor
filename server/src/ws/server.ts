@@ -59,6 +59,7 @@ function queueYjsUpdate(
   update: Uint8Array,
   origin: WebSocket,
   updateId?: number,
+  userId?: string | null,
 ): void {
   const previousUpdate = updateQueues.get(docId) ?? Promise.resolve();
   const nextUpdate = previousUpdate.then(async () => {
@@ -66,7 +67,7 @@ function queueYjsUpdate(
       throw new Error("Document persistence is unavailable");
     }
 
-    await saveUpdate(docId, update, "client");
+    await saveUpdate(docId, update, "client", userId);
     Y.applyUpdate(ydoc, update, origin);
     if (updateId !== undefined && origin.readyState === WebSocket.OPEN) {
       try {
@@ -158,8 +159,10 @@ export function attachWsServer(server: any) {
       ws.close(1008, "docId and token required");
       return;
     }
+    let userId: string | null = null;
     try {
-      verifyToken(token);
+      const payload = verifyToken(token);
+      userId = typeof payload?.id === "string" ? payload.id : null;
     } catch {
       ws.close(1008, "invalid or expired token");
       return;
@@ -217,7 +220,7 @@ export function attachWsServer(server: any) {
       if (msg.type === "update") {
         const update = new Uint8Array(msg.update);
         const updateId = Number.isSafeInteger(msg.id) ? msg.id as number : undefined;
-        queueYjsUpdate(docId, ydoc, update, ws, updateId);
+        queueYjsUpdate(docId, ydoc, update, ws, updateId, userId);
       } else if (msg.type === "awareness") {
         // Apply awareness update from client
         const update = new Uint8Array(msg.update);

@@ -1,5 +1,6 @@
 import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCaret from '@tiptap/extension-collaboration-caret';
+import type { JSONContent } from '@tiptap/core';
 import { Placeholder } from '@tiptap/extensions/placeholder';
 import { useEditor, useEditorState, EditorContent } from '@tiptap/react';
 import type { Editor as TiptapEditorInstance } from '@tiptap/react';
@@ -49,6 +50,8 @@ export type TiptapEditorProps = {
     offlineMode?: boolean;
     onConnectionStatusChange?: (status: ProviderStatus) => void;
     onDocumentTextChange?: (text: string) => void;
+    restoreRequest?: { id: number; content: JSONContent } | null;
+    onRestoreApplied?: (id: number) => void;
     onOfflineEditCountChange?: (count: number) => void;
     onSyncStatusChange?: (status: ProviderSyncStatus) => void;
     renderToolbar?: (editor: TiptapEditorInstance | null) => ReactNode;
@@ -90,6 +93,8 @@ export default function TiptapEditor({
     offlineMode = false,
     onConnectionStatusChange,
     onDocumentTextChange,
+    restoreRequest,
+    onRestoreApplied,
     onOfflineEditCountChange,
     onSyncStatusChange,
     renderToolbar,
@@ -140,13 +145,31 @@ export default function TiptapEditor({
             Placeholder.configure({ placeholder: 'Start writing here...' }),
             ...(collaborationCaret ? [collaborationCaret] : []),
         ],
-        onCreate: ({ editor: createdEditor }) => {
-            onDocumentTextChange?.(createdEditor.getText());
-        },
-        onUpdate: ({ editor: updatedEditor }) => {
-            onDocumentTextChange?.(updatedEditor.getText());
-        },
-    }, [provider, onDocumentTextChange]);
+    }, [provider]);
+
+    useEffect(() => {
+        if (!editor) {
+            return;
+        }
+
+        const reportDocumentText = (): void => {
+            onDocumentTextChange?.(editor.getText());
+        };
+
+        reportDocumentText();
+        ydoc.on('update', reportDocumentText);
+        return () => ydoc.off('update', reportDocumentText);
+    }, [editor, onDocumentTextChange, ydoc]);
+
+    useEffect(() => {
+        if (!editor || !restoreRequest) {
+            return;
+        }
+
+        editor.commands.setContent(restoreRequest.content, { emitUpdate: true });
+        onDocumentTextChange?.(editor.getText());
+        onRestoreApplied?.(restoreRequest.id);
+    }, [editor, onDocumentTextChange, onRestoreApplied, restoreRequest]);
 
     const toolbarState = useEditorState({
         editor,
