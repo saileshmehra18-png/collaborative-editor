@@ -1,4 +1,5 @@
 import * as Y from 'yjs';
+import { getAuthSession } from '../auth/authStorage';
 
 export type ProviderStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 
@@ -23,7 +24,7 @@ function isYjsMessage(value: unknown): value is YjsMessage {
 }
 
 export class CustomYjsWebSocketProvider {
-    readonly ws: WebSocket;
+    readonly ws: WebSocket | null;
     status: ProviderStatus = 'connecting';
     onStatusChange?: (status: ProviderStatus) => void;
 
@@ -36,8 +37,16 @@ export class CustomYjsWebSocketProvider {
     ) {
         this.onStatusChange = onStatusChange;
 
+        const token = getAuthSession()?.token;
+        if (!token) {
+            this.ws = null;
+            this.setStatus('error');
+            return;
+        }
+
         const endpoint = new URL('ws://localhost:4000/');
         endpoint.searchParams.set('docId', docId);
+        endpoint.searchParams.set('token', token);
         this.ws = new WebSocket(endpoint);
 
         this.doc.on('update', this.handleDocumentUpdate);
@@ -54,12 +63,15 @@ export class CustomYjsWebSocketProvider {
 
         this.destroyed = true;
         this.doc.off('update', this.handleDocumentUpdate);
-        this.ws.removeEventListener('open', this.handleOpen);
-        this.ws.removeEventListener('message', this.handleMessage);
-        this.ws.removeEventListener('close', this.handleClose);
-        this.ws.removeEventListener('error', this.handleError);
+        this.ws?.removeEventListener('open', this.handleOpen);
+        this.ws?.removeEventListener('message', this.handleMessage);
+        this.ws?.removeEventListener('close', this.handleClose);
+        this.ws?.removeEventListener('error', this.handleError);
 
-        if (this.ws.readyState === WebSocket.CONNECTING || this.ws.readyState === WebSocket.OPEN) {
+        if (
+            this.ws &&
+            (this.ws.readyState === WebSocket.CONNECTING || this.ws.readyState === WebSocket.OPEN)
+        ) {
             this.ws.close();
         }
 
@@ -104,7 +116,7 @@ export class CustomYjsWebSocketProvider {
     };
 
     private sendUpdate(update: Uint8Array): void {
-        if (this.ws.readyState !== WebSocket.OPEN || this.destroyed) {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN || this.destroyed) {
             return;
         }
 
