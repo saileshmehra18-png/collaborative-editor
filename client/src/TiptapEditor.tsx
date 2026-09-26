@@ -1,6 +1,9 @@
+import Collaboration from '@tiptap/extension-collaboration';
 import { useEditor, useEditorState, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
+import * as Y from 'yjs';
 import './TiptapEditor.css';
 
 export type TiptapEditorProps = {
@@ -38,9 +41,17 @@ function ToolbarButton({
 }
 
 export default function TiptapEditor({ className }: TiptapEditorProps) {
+    const [ydoc] = useState(() => new Y.Doc());
     const editor = useEditor({
-        extensions: [StarterKit],
-        content: '<p>Start writing here...</p>',
+        extensions: [
+            StarterKit.configure({ undoRedo: false }),
+            Collaboration.configure({ document: ydoc }),
+        ],
+        onCreate: ({ editor: createdEditor }) => {
+            if (ydoc.getXmlFragment('default').length === 0) {
+                createdEditor.commands.setContent('<p>Start writing here...</p>');
+            }
+        },
     });
 
     const toolbarState = useEditorState({

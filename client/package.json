@@ -9,11 +9,13 @@
         "preview": "vite preview"
     },
     "dependencies": {
+        "@tiptap/extension-collaboration": "^3.31.3",
         "@tiptap/pm": "^3.31.3",
         "@tiptap/react": "^3.31.3",
         "@tiptap/starter-kit": "^3.31.3",
         "react": "^19.1.0",
-        "react-dom": "^19.1.0"
+        "react-dom": "^19.1.0",
+        "yjs": "^13.6.33"
     },
     "devDependencies": {
         "@types/react": "^19.1.2",
