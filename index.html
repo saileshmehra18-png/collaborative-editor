@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIT'N'BUILD - Collab Editor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background Design -->
+    <div class="bg-circle-1"></div>
+    <div class="bg-circle-2"></div>
+
+    <!-- Main Glass UI -->
+    <div class="glass-container">
+        
+        <!-- Left Sidebar -->
+        <aside class="sidebar bento-box">
+            <h2>BIT'N'BUILD</h2>
+            <hr>
+            <h3>📄 Proposal</h3>
+            <ul class="sections-list">
+                <li class="active">Introduction</li>
+                <li>Architecture</li>
+                <li>Database</li>
+                <li>Results</li>
+                <li>Conclusion</li>
+            </ul>
+        </aside>
+
+        <!-- Center Editor Area -->
+        <main class="editor-area bento-box">
+            <header class="editor-header">
+                <h1>Project Proposal</h1>
+                <button class="share-btn">🔗 Share ⋮</button>
+            </header>
+            <textarea class="document-editor" placeholder="Start typing here...">
+Our system allows teams to collaborate in real time, even when users are offline.
+
+Architecture
+────────────
+1. Frontend
+2. Backend
+3. Database
+            </textarea>
+            <div class="status-bar">
+                🟢 Saved · 3 collaborators
+            </div>
+        </main>
+
+        <!-- Right Sidebar: History & Status -->
+        <aside class="right-panel">
+            <div class="online-status bento-box">
+                🟢 3 Online 👤
+            </div>
+            
+            <div class="version-history bento-box">
+                <h3>Version History</h3>
+                <div class="history-item">
+                    <span class="time">12:42</span> <strong>Rahul</strong>
+                    <p>Edited Architecture</p>
+                </div>
+                <div class="history-item">
+                    <span class="time">12:37</span> <strong>Alex</strong>
+                    <p>Added Database</p>
+                </div>
+                <div class="history-item">
+                    <span class="time">12:21</span> <strong>You</strong>
+                    <p>Created document</p>
+                </div>
+                <button class="restore-btn">Restore</button>
+            </div>
+        </aside>
+
+    </div>
+</body>
+</html>

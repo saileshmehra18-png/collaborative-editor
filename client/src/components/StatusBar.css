@@ -1,0 +1,133 @@
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-secondary);
+  border-top: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  backdrop-filter: blur(10px);
+  gap: 1.5rem;
+}
+
+.status-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.status-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.status-value.endpoint {
+  background: rgba(99, 102, 241, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+  font-size: 0.7rem;
+}
+
+.status-indicator.online,
+.status-indicator.connected {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-indicator.offline,
+.status-indicator.disconnected {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-time-ago {
+  color: var(--text-tertiary);
+  font-size: 0.7rem;
+  font-style: italic;
+}
+
+.status-actions {
+  margin-left: auto;
+}
+
+.status-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: transparent;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 0.25rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.status-action-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.status-action-btn svg {
+  display: block;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .status-bar {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .status-section {
+    gap: 0.5rem;
+  }
+
+  .status-value.endpoint {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .status-bar {
+    font-size: 0.7rem;
+  }
+
+  .status-time-ago {
+    display: none;
+  }
+
+  .status-value.endpoint {
+    max-width: 100px;
+  }
+}

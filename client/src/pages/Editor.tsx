@@ -1,93 +1,124 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import {
-  ArrowLeft,
-  Bold,
-  Italic,
-  Strikethrough,
-  Code,
-  List,
-  ListOrdered,
-  WifiOff,
-} from 'lucide-react'
-import TiptapEditor from '../TiptapEditor'
-import TimeMachinePanel from './TimeMachinePanel'
-import DiagnosticsPanel from './DiagnosticsPanel'
-import { getAuthSession } from '../auth/authStorage'
-import type { AuthUser } from '../auth/authApi'
-import type { JSONContent } from '@tiptap/core'
-import type { EditorDiagnostics } from '../TiptapEditor'
-import type { HistorySession } from './TimeMachinePanel'
-import type {
-  ProviderStatus,
-  ProviderSyncStatus,
-} from '../providers/CustomYjsWebSocketProvider'
+import * as Y from 'yjs'
+import { TopNav } from '../components/TopNav'
+import { SecondaryHeader } from '../components/SecondaryHeader'
+import { TabBar, TabType } from '../components/TabBar'
+import { EditorToolbar } from '../components/EditorToolbar'
+import { EditorContent } from '../components/EditorContent'
+import { StatusBar } from '../components/StatusBar'
 import './Editor.css'
 
 function Editor() {
   const { docId } = useParams<{ docId: string }>()
   const navigate = useNavigate()
-
+  
   const [title, setTitle] = useState('Untitled')
-  const [connectionStatus, setConnectionStatus] = useState<ProviderStatus>('connecting')
-  const [offlineMode, setOfflineMode] = useState(false)
-  const [offlineEditCount, setOfflineEditCount] = useState(0)
-  const [syncStatus, setSyncStatus] = useState<ProviderSyncStatus>('idle')
-  const [currentDocumentText, setCurrentDocumentText] = useState<string | null>(null)
-  const [currentUser] = useState<AuthUser | null>(() => getAuthSession()?.user ?? null)
-  const [editorDiagnostics, setEditorDiagnostics] = useState<EditorDiagnostics | null>(null)
-  const [historySessions, setHistorySessions] = useState<HistorySession[]>([])
-  const [restoreRequest, setRestoreRequest] = useState<{ id: number; content: JSONContent } | null>(null)
-  const nextRestoreId = useRef(0)
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting')
+  const [activeTab, setActiveTab] = useState<TabType>('editor')
+  const [showPeerCursors, setShowPeerCursors] = useState(true)
+  const [showCRDTClock, setShowCRDTClock] = useState(false)
+  const [onlineUsers, setOnlineUsers] = useState(1)
+  
+  const ydocRef = useRef<Y.Doc | null>(null)
+  const wsRef = useRef<WebSocket | null>(null)
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout>()
 
-  const requestRestore = useCallback((content: JSONContent) => {
-    setRestoreRequest({ id: ++nextRestoreId.current, content })
-  }, [])
-  const handleRestoreApplied = useCallback((id: number) => {
-    setRestoreRequest((request) => request?.id === id ? null : request)
-  }, [])
-
-  const syncStatusLabel = syncStatus === 'synced'
-    ? 'Synchronized to server'
-    : syncStatus === 'syncing'
-      ? 'Syncing Yjs updates'
-      : offlineMode
-        ? offlineEditCount > 0 ? 'Offline edits pending' : 'Offline mode enabled'
-        : 'Waiting for connection'
-  const connectionStatusLabel = offlineMode
-    ? 'Offline'
-    : connectionStatus === 'connected'
-      ? 'Connected'
-      : connectionStatus === 'connecting'
-        ? 'Connecting'
-        : connectionStatus === 'error'
-          ? 'Connection error'
-          : 'Disconnected'
+  const userName = localStorage.getItem('userName') || 'Anonymous'
 
   useEffect(() => {
     if (!docId) return
 
-    let isCurrent = true
-    const token = getAuthSession()?.token
-    fetch('/api/documents', {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    // Load document metadata
+    const token = localStorage.getItem('token')
+    fetch(`http://localhost:4000/api/documents`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     })
-      .then(async (response) => {
-        if (!response.ok) throw new Error('Failed to load documents')
-        return response.json() as Promise<Array<{ id: string; title: string }>>
+      .then(res => res.json())
+      .then((docs: any[]) => {
+        const doc = docs.find(d => d.id === docId)
+        if (doc) setTitle(doc.title)
       })
-      .then((documents) => {
-        const document = documents.find((item) => item.id === docId)
-        if (isCurrent && document) setTitle(document.title)
-      })
-      .catch(() => {
-        if (isCurrent) setTitle('Untitled')
-      })
+      .catch(console.error)
+
+    // Initialize Yjs document
+    const ydoc = new Y.Doc()
+    ydocRef.current = ydoc
+
+    // Connect WebSocket
+    connectWebSocket()
 
     return () => {
-      isCurrent = false
+      if (wsRef.current) {
+        wsRef.current.close()
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+      }
+      ydoc.destroy()
     }
   }, [docId])
+
+  function connectWebSocket() {
+    if (!docId || !ydocRef.current) return
+
+    const token = localStorage.getItem('token')
+    // FIXED: Added /ws path as per main branch backend
+    const ws = new WebSocket(`ws://localhost:4000/ws?docId=${docId}&token=${token}`)
+    wsRef.current = ws
+
+    ws.onopen = () => {
+      setConnectionStatus('connected')
+      console.log('WebSocket connected')
+    }
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        
+        if (data.type === 'sync' || data.type === 'update') {
+          const update = new Uint8Array(data.update)
+          Y.applyUpdate(ydocRef.current!, update)
+        }
+
+        if (data.type === 'awareness') {
+          // Handle awareness updates for collaborator presence
+          const awarenessUpdate = new Uint8Array(data.update)
+          // TODO: Apply awareness update to show peer cursors
+          console.log('Awareness update received', awarenessUpdate)
+        }
+      } catch (error) {
+        console.error('Failed to process message:', error)
+      }
+    }
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error)
+      setConnectionStatus('disconnected')
+    }
+
+    ws.onclose = () => {
+      setConnectionStatus('disconnected')
+      
+      // Attempt reconnection after 3 seconds
+      reconnectTimeoutRef.current = setTimeout(() => {
+        setConnectionStatus('connecting')
+        connectWebSocket()
+      }, 3000)
+    }
+
+    // Send updates to server
+    ydocRef.current.on('update', (update: Uint8Array, origin: any) => {
+      if (origin !== ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'update',
+          update: Array.from(update)
+        }))
+      }
+    })
+  }
 
   if (!docId) {
     return (
@@ -102,174 +133,72 @@ function Editor() {
 
   return (
     <div className="editor-page">
-      {!offlineMode && (connectionStatus === 'disconnected' || connectionStatus === 'error') && (
-        <div className="disconnect-banner">
-          <span>
-            <WifiOff size={16} style={{ display: 'inline', marginRight: '8px' }} />
-            WebSocket connection unavailable. Reconnecting automatically.
-          </span>
+      <TopNav
+        userName={userName}
+        breadcrumbs={[
+          { label: 'Documents', path: '/documents' },
+          { label: title, path: `/documents/${docId}` }
+        ]}
+        connectionStatus={connectionStatus}
+        onlineUsers={onlineUsers}
+      />
+
+      <SecondaryHeader
+        version="v1.2.3"
+        documentTitle={title}
+        onDocumentChange={(newTitle) => setTitle(newTitle)}
+        onlineUsers={onlineUsers}
+      />
+
+      <TabBar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        documentName={title}
+      />
+
+      {activeTab === 'editor' && (
+        <>
+          <EditorToolbar
+            showPeerCursors={showPeerCursors}
+            onTogglePeerCursors={() => setShowPeerCursors(!showPeerCursors)}
+            showCRDTClock={showCRDTClock}
+            onToggleCRDTClock={() => setShowCRDTClock(!showCRDTClock)}
+          />
+
+          {ydocRef.current && (
+            <EditorContent
+              ydoc={ydocRef.current}
+              showCRDTClock={showCRDTClock}
+              showPeerCursors={showPeerCursors}
+            />
+          )}
+        </>
+      )}
+
+      {activeTab === 'dashboard' && (
+        <div className="dashboard-view">
+          <h2>Dashboard</h2>
+          <p>Document statistics and analytics will be displayed here.</p>
         </div>
       )}
 
-      <header className="editor-header">
-        <div className="header-left">
-          <button className="back-btn" onClick={() => navigate('/documents')}>
-            <ArrowLeft size={18} />
-            <span>Documents</span>
-          </button>
-
-          <input
-            type="text"
-            className="document-title-input"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Untitled"
-          />
-        </div>
-
-        <div className="header-right">
-          <div className={`status-badge ${connectionStatus === 'connected' ? 'connected' : connectionStatus === 'connecting' ? 'syncing' : 'disconnected'}`}>
-            <span className="status-dot"></span>
-            {connectionStatus === 'connected' && 'Connected'}
-            {connectionStatus === 'connecting' && 'Connecting...'}
-            {connectionStatus === 'disconnected' && 'Disconnected'}
-            {connectionStatus === 'error' && 'Connection error'}
+      {activeTab === 'diagnostics' && (
+        <div className="diagnostics-view">
+          <h2>Diagnostics</h2>
+          <div className="diagnostic-info">
+            <p><strong>Document ID:</strong> {docId}</p>
+            <p><strong>Connection Status:</strong> {connectionStatus}</p>
+            <p><strong>Yjs Client ID:</strong> {ydocRef.current?.clientID}</p>
+            <p><strong>Online Users:</strong> {onlineUsers}</p>
           </div>
         </div>
-      </header>
+      )}
 
-      <section className="conflict-simulator" aria-labelledby="conflict-simulator-title">
-        <div className="conflict-simulator-heading">
-          <h2 id="conflict-simulator-title">Conflict Simulator</h2>
-          <label className="offline-mode-toggle">
-            <input
-              type="checkbox"
-              checked={offlineMode}
-              onChange={(event) => setOfflineMode(event.target.checked)}
-            />
-            Offline Mode
-          </label>
-        </div>
-        <dl className="conflict-simulator-stats">
-          <div>
-            <dt>Connection</dt>
-            <dd>{connectionStatusLabel}</dd>
-          </div>
-          <div>
-            <dt>Mode</dt>
-            <dd>{offlineMode ? 'Offline' : 'Online'}</dd>
-          </div>
-          <div>
-            <dt>Local edits while offline</dt>
-            <dd>{offlineEditCount}</dd>
-          </div>
-          <div>
-            <dt>Sync status</dt>
-            <dd role="status" aria-live="polite">{syncStatusLabel}</dd>
-          </div>
-        </dl>
-        <button
-          className="simulator-reconnect"
-          type="button"
-          disabled={!offlineMode}
-          onClick={() => setOfflineMode(false)}
-        >
-          Reconnect and sync
-        </button>
-      </section>
-
-      <TimeMachinePanel
-        docId={docId}
-        currentText={currentDocumentText}
-        onRestore={requestRestore}
-        onSessionsChange={setHistorySessions}
+      <StatusBar
+        wsConnected={connectionStatus === 'connected'}
+        apiEndpoint="http://localhost:4000"
+        wsEndpoint="ws://localhost:4000/ws"
       />
-      <DiagnosticsPanel
-        user={currentUser}
-        diagnostics={editorDiagnostics}
-        sessions={historySessions}
-      />
-
-      <div className="editor-container">
-        <TiptapEditor
-          key={docId}
-          docId={docId}
-          className="embedded-tiptap-editor"
-          offlineMode={offlineMode}
-          onConnectionStatusChange={setConnectionStatus}
-          onDiagnosticsChange={setEditorDiagnostics}
-          onDocumentTextChange={setCurrentDocumentText}
-          restoreRequest={restoreRequest}
-          onRestoreApplied={handleRestoreApplied}
-          onOfflineEditCountChange={setOfflineEditCount}
-          onSyncStatusChange={setSyncStatus}
-          renderToolbar={(editor) => (
-            <>
-              <button
-                type="button"
-                className={`toolbar-btn ${editor?.isActive('bold') ? 'is-active' : ''}`}
-                onClick={() => editor?.chain().focus().toggleBold().run()}
-                title="Bold (Ctrl+B)"
-                aria-label="Bold"
-                disabled={!editor}
-              >
-                <Bold size={16} />
-              </button>
-              <button
-                type="button"
-                className={`toolbar-btn ${editor?.isActive('italic') ? 'is-active' : ''}`}
-                onClick={() => editor?.chain().focus().toggleItalic().run()}
-                title="Italic (Ctrl+I)"
-                aria-label="Italic"
-                disabled={!editor}
-              >
-                <Italic size={16} />
-              </button>
-              <button
-                type="button"
-                className={`toolbar-btn ${editor?.isActive('strike') ? 'is-active' : ''}`}
-                onClick={() => editor?.chain().focus().toggleStrike().run()}
-                title="Strikethrough"
-                aria-label="Strikethrough"
-                disabled={!editor}
-              >
-                <Strikethrough size={16} />
-              </button>
-              <button
-                type="button"
-                className={`toolbar-btn ${editor?.isActive('code') ? 'is-active' : ''}`}
-                onClick={() => editor?.chain().focus().toggleCode().run()}
-                title="Code (Ctrl+E)"
-                aria-label="Code"
-                disabled={!editor}
-              >
-                <Code size={16} />
-              </button>
-              <div className="toolbar-divider" />
-              <button
-                type="button"
-                className={`toolbar-btn ${editor?.isActive('bulletList') ? 'is-active' : ''}`}
-                onClick={() => editor?.chain().focus().toggleBulletList().run()}
-                title="Bullet List"
-                aria-label="Bullet list"
-                disabled={!editor}
-              >
-                <List size={16} />
-              </button>
-              <button
-                type="button"
-                className={`toolbar-btn ${editor?.isActive('orderedList') ? 'is-active' : ''}`}
-                onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-                title="Numbered List"
-                aria-label="Numbered list"
-                disabled={!editor}
-              >
-                <ListOrdered size={16} />
-              </button>
-            </>
-          )}
-        />
-      </div>
     </div>
   )
 }
