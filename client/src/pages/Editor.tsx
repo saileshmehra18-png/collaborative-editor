@@ -11,6 +11,7 @@ import {
   WifiOff,
 } from 'lucide-react'
 import TiptapEditor from '../TiptapEditor'
+import TimeMachinePanel from './TimeMachinePanel'
 import { getAuthSession } from '../auth/authStorage'
 import type {
   ProviderStatus,
@@ -27,6 +28,7 @@ function Editor() {
   const [offlineMode, setOfflineMode] = useState(false)
   const [offlineEditCount, setOfflineEditCount] = useState(0)
   const [syncStatus, setSyncStatus] = useState<ProviderSyncStatus>('idle')
+  const [currentDocumentText, setCurrentDocumentText] = useState<string | null>(null)
 
   const syncStatusLabel = syncStatus === 'synced'
     ? 'Synchronized to server'
@@ -159,6 +161,8 @@ function Editor() {
         </button>
       </section>
 
+      <TimeMachinePanel docId={docId} currentText={currentDocumentText} />
+
       <div className="editor-container">
         <TiptapEditor
           key={docId}
@@ -166,6 +170,7 @@ function Editor() {
           className="embedded-tiptap-editor"
           offlineMode={offlineMode}
           onConnectionStatusChange={setConnectionStatus}
+          onDocumentTextChange={setCurrentDocumentText}
           onOfflineEditCountChange={setOfflineEditCount}
           onSyncStatusChange={setSyncStatus}
           renderToolbar={(editor) => (

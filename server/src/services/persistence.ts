@@ -40,6 +40,57 @@ export async function loadDocState(docId: string): Promise<Uint8Array | null> {
   return updates.rowCount || snapshot ? Y.encodeStateAsUpdate(ydoc) : null;
 }
 
+export type DocumentHistoryVersion = {
+  version: string;
+  kind: "snapshot" | "update";
+  createdAt: number;
+  state: number[];
+};
+
+export async function loadDocumentHistory(docId: string): Promise<DocumentHistoryVersion[]> {
+  const [snapshotResult, updateResult] = await Promise.all([
+    db.query<{ id: string; state: Buffer; created_at: string }>(
+      "SELECT id, state, created_at FROM doc_snapshots WHERE doc_id = $1 ORDER BY created_at ASC, id ASC",
+      [docId],
+    ),
+    db.query<{ id: string; update_data: Buffer; created_at: string }>(
+      "SELECT id, update_data, created_at FROM doc_updates WHERE doc_id = $1 ORDER BY created_at ASC, id ASC",
+      [docId],
+    ),
+  ]);
+
+  const snapshots = snapshotResult.rows;
+  const latestSnapshot = snapshots[snapshots.length - 1];
+  const versions: DocumentHistoryVersion[] = snapshots.map((snapshot) => ({
+    version: `snapshot-${snapshot.id}`,
+    kind: "snapshot",
+    createdAt: Number(snapshot.created_at),
+    state: Array.from(snapshot.state),
+  }));
+
+  const ydoc = new Y.Doc();
+  try {
+    if (latestSnapshot) Y.applyUpdate(ydoc, latestSnapshot.state);
+
+    for (const row of updateResult.rows) {
+      Y.applyUpdate(ydoc, row.update_data);
+      const createdAt = Number(row.created_at);
+      if (!latestSnapshot || createdAt >= Number(latestSnapshot.created_at)) {
+        versions.push({
+          version: `update-${row.id}`,
+          kind: "update",
+          createdAt,
+          state: Array.from(Y.encodeStateAsUpdate(ydoc)),
+        });
+      }
+    }
+  } finally {
+    ydoc.destroy();
+  }
+
+  return versions.sort((left, right) => left.createdAt - right.createdAt);
+}
+
 export async function saveUpdate(docId: string, update: Uint8Array, origin?: string): Promise<void> {
   const client = await db.connect();
   const now = Date.now();

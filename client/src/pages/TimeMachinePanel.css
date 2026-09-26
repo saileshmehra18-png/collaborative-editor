@@ -1,0 +1,188 @@
+.time-machine-panel {
+    margin: 0 var(--space-xl) var(--space-md);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius);
+    background: var(--surface-container-lowest);
+}
+
+.time-machine-panel>summary {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-sm) var(--space-md);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.time-machine-count,
+.time-machine-timeline button span,
+.time-machine-version-info span {
+    color: var(--on-surface-variant);
+    font-size: 11px;
+    font-weight: 400;
+}
+
+.time-machine-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    padding: 0 var(--space-md) var(--space-sm);
+    color: var(--on-surface-variant);
+    font-size: 11px;
+}
+
+.time-machine-toolbar button {
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-sm);
+    background: var(--surface-container-lowest);
+    color: var(--on-surface);
+    cursor: pointer;
+    font: inherit;
+}
+
+.time-machine-toolbar button:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.time-machine-message {
+    margin: 0;
+    padding: var(--space-md);
+    color: var(--on-surface-variant);
+    font-size: 13px;
+}
+
+.time-machine-message.is-error {
+    color: #9F1239;
+}
+
+.time-machine-content {
+    display: grid;
+    grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+    border-top: 1px solid var(--outline-variant);
+}
+
+.time-machine-timeline {
+    max-height: 360px;
+    overflow-y: auto;
+    margin: 0;
+    padding: var(--space-sm);
+    border-right: 1px solid var(--outline-variant);
+    list-style: none;
+}
+
+.time-machine-timeline button {
+    display: grid;
+    width: 100%;
+    gap: 3px;
+    padding: var(--space-sm);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--on-surface);
+    cursor: pointer;
+    text-align: left;
+}
+
+.time-machine-timeline button:hover,
+.time-machine-timeline button.is-selected {
+    border-color: var(--outline-variant);
+    background: var(--surface-container-low);
+}
+
+.time-machine-timeline time,
+.time-machine-version-info time {
+    font-size: 11px;
+}
+
+.time-machine-selected {
+    min-width: 0;
+    padding: var(--space-md);
+}
+
+.time-machine-version-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md) var(--space-xl);
+    margin-bottom: var(--space-sm);
+}
+
+.time-machine-version-info div {
+    display: grid;
+    gap: 3px;
+}
+
+.time-machine-version-info strong {
+    font-size: 12px;
+}
+
+.time-machine-preview {
+    max-height: 260px;
+    overflow: auto;
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+}
+
+.time-machine-preview .ProseMirror {
+    min-height: 80px;
+    outline: none;
+}
+
+.time-machine-text-comparison {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-md);
+    margin-top: var(--space-sm);
+}
+
+.time-machine-text-comparison h4 {
+    margin: 0 0 var(--space-xs);
+    font-size: 11px;
+}
+
+.time-machine-text-comparison pre {
+    max-height: 110px;
+    overflow: auto;
+    margin: 0;
+    padding: var(--space-sm);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-sm);
+    background: var(--surface-container-low);
+    font: 11px/1.5 var(--font-family-mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+    .time-machine-panel {
+        margin-inline: var(--space-md);
+    }
+
+    .time-machine-content {
+        grid-template-columns: 1fr;
+    }
+
+    .time-machine-timeline {
+        display: flex;
+        max-height: 180px;
+        gap: var(--space-xs);
+        border-right: 0;
+        border-bottom: 1px solid var(--outline-variant);
+    }
+
+    .time-machine-timeline li {
+        min-width: 150px;
+    }
+
+    .time-machine-text-comparison {
+        grid-template-columns: 1fr;
+    }
+
+    .time-machine-toolbar {
+        align-items: flex-start;
+    }
+}

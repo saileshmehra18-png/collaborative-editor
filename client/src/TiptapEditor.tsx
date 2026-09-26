@@ -48,6 +48,7 @@ export type TiptapEditorProps = {
     docId?: string;
     offlineMode?: boolean;
     onConnectionStatusChange?: (status: ProviderStatus) => void;
+    onDocumentTextChange?: (text: string) => void;
     onOfflineEditCountChange?: (count: number) => void;
     onSyncStatusChange?: (status: ProviderSyncStatus) => void;
     renderToolbar?: (editor: TiptapEditorInstance | null) => ReactNode;
@@ -88,6 +89,7 @@ export default function TiptapEditor({
     docId = DOCUMENT_ID,
     offlineMode = false,
     onConnectionStatusChange,
+    onDocumentTextChange,
     onOfflineEditCountChange,
     onSyncStatusChange,
     renderToolbar,
@@ -138,7 +140,13 @@ export default function TiptapEditor({
             Placeholder.configure({ placeholder: 'Start writing here...' }),
             ...(collaborationCaret ? [collaborationCaret] : []),
         ],
-    }, [provider]);
+        onCreate: ({ editor: createdEditor }) => {
+            onDocumentTextChange?.(createdEditor.getText());
+        },
+        onUpdate: ({ editor: updatedEditor }) => {
+            onDocumentTextChange?.(updatedEditor.getText());
+        },
+    }, [provider, onDocumentTextChange]);
 
     const toolbarState = useEditorState({
         editor,
