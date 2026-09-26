@@ -21,10 +21,10 @@ export function loadDocState(docId: string): Uint8Array | null {
   if (snapshot) Y.applyUpdate(ydoc, snapshot.state);
 
   const updates = db
-    .prepare("SELECT update FROM doc_updates WHERE doc_id = ? ORDER BY created_at ASC")
-    .all(docId) as { update: Buffer }[];
+    .prepare("SELECT update_data FROM doc_updates WHERE doc_id = ? ORDER BY created_at ASC")
+    .all(docId) as { update_data: Buffer }[];
 
-  for (const row of updates) Y.applyUpdate(ydoc, row.update);
+  for (const row of updates) Y.applyUpdate(ydoc, row.update_data);
 
   return updates.length || snapshot ? Y.encodeStateAsUpdate(ydoc) : null;
 }
@@ -32,7 +32,7 @@ export function loadDocState(docId: string): Uint8Array | null {
 export function saveUpdate(docId: string, update: Uint8Array, origin?: string) {
   ensureDocument(docId);
   db.prepare(
-    "INSERT INTO doc_updates (doc_id, update, origin, created_at) VALUES (?, ?, ?, ?)"
+    "INSERT INTO doc_updates (doc_id, update_data, origin, created_at) VALUES (?, ?, ?, ?)"
   ).run(docId, Buffer.from(update), origin ?? "unknown", Date.now());
   db.prepare("UPDATE documents SET updated_at = ? WHERE id = ?").run(Date.now(), docId);
 }
