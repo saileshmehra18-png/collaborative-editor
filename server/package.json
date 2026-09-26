@@ -25,15 +25,14 @@
     "yjs": "^13.6.33"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "@types/better-sqlite3": "^9.6.0",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^26.6.3",
-    "@types/ws": "^8.18.1",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.6.3"
+"@types/bcryptjs": "^2.4.6",
+"@types/better-sqlite3": "^9.6.0",
+"@types/cors": "^2.8.19",
+"@types/express": "^5.0.6",
+"@types/jsonwebtoken": "^9.0.10",
+"@types/node": "^26.6.3",
+"@types/ws": "^8.18.1",
+"typescript": "^5.6.3"
   },
   "allowScripts": {
     "better-sqlite3@13.0.3": true
