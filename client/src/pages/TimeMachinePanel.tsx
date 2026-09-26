@@ -32,6 +32,7 @@ type TimeMachinePanelProps = {
     docId: string;
     currentText: string | null;
     onRestore: (content: JSONContent) => void;
+    canRestore?: boolean;
     onSessionsChange?: (sessions: HistorySession[]) => void;
 };
 
@@ -53,11 +54,13 @@ function HistoricalPreview({
     session,
     currentText,
     onRestore,
+    canRestore,
 }: {
     checkpoint: HistoryCheckpoint;
     session: HistorySession;
     currentText: string | null;
     onRestore: (content: JSONContent) => void;
+    canRestore: boolean;
 }) {
     const [ydoc] = useState(() => {
         const document = new Y.Doc();
@@ -82,7 +85,7 @@ function HistoricalPreview({
             : 'Text differs from current document';
 
     const restore = (): void => {
-        if (!editor || !window.confirm('Restore this checkpoint as a new document change? Existing history will be kept.')) {
+        if (!canRestore || !editor || !window.confirm('Restore this checkpoint as a new document change? Existing history will be kept.')) {
             return;
         }
 
@@ -120,9 +123,9 @@ function HistoricalPreview({
             </div>
             <div className="time-machine-actions">
                 <span>Preview only until restored</span>
-                <button type="button" disabled={!editor} onClick={restore}>
+                {canRestore && <button type="button" disabled={!editor} onClick={restore}>
                     Restore this version
-                </button>
+                </button>}
             </div>
             <div className="time-machine-text-comparison">
                 <div>
@@ -142,6 +145,7 @@ export default function TimeMachinePanel({
     docId,
     currentText,
     onRestore,
+    canRestore = true,
     onSessionsChange,
 }: TimeMachinePanelProps) {
     const [sessions, setSessions] = useState<HistorySession[]>([]);
@@ -251,6 +255,7 @@ export default function TimeMachinePanel({
                     session={selectedSession}
                     currentText={currentText}
                     onRestore={onRestore}
+                    canRestore={canRestore}
                 />
             )}
         </details>

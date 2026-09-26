@@ -1,0 +1,100 @@
+.document-sharing-panel {
+    margin: 0 var(--space-xl) var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius);
+    background: var(--surface-container-lowest);
+}
+
+.document-sharing-panel>summary {
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.document-sharing-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-sm);
+    padding-top: var(--space-sm);
+}
+
+.document-sharing-form label {
+    display: grid;
+    gap: 3px;
+    color: var(--on-surface-variant);
+    font-size: 11px;
+}
+
+.document-sharing-form input,
+.document-sharing-form select {
+    min-height: 32px;
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--on-surface);
+    font: inherit;
+    font-size: 12px;
+}
+
+.document-sharing-form button,
+.document-sharing-grants button {
+    min-height: 32px;
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-sm);
+    background: var(--surface-container-low);
+    color: var(--on-surface);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+}
+
+.document-sharing-form button:disabled,
+.document-sharing-grants button:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.document-sharing-grants {
+    padding-top: var(--space-sm);
+}
+
+.document-sharing-grants h3 {
+    margin: 0 0 var(--space-xs);
+    font-size: 12px;
+}
+
+.document-sharing-grants p,
+.document-sharing-grants li,
+.document-sharing-error {
+    font-size: 12px;
+}
+
+.document-sharing-grants ul {
+    display: grid;
+    gap: var(--space-xs);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.document-sharing-grants li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+}
+
+.document-sharing-error {
+    margin: var(--space-xs) 0 0;
+    color: #9F1239;
+}
+
+@media (max-width: 760px) {
+    .document-sharing-panel {
+        margin-inline: var(--space-md);
+    }
+}

@@ -1,9 +1,34 @@
-﻿CREATE TABLE IF NOT EXISTS documents (
+﻿CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'user',
+  created_at BIGINT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS documents (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL DEFAULT 'Untitled',
   created_at BIGINT NOT NULL,
-  updated_at BIGINT NOT NULL
+  updated_at BIGINT NOT NULL,
+  owner_id TEXT REFERENCES users(id)
 );
+
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS owner_id TEXT REFERENCES users(id);
+
+CREATE INDEX IF NOT EXISTS documents_owner_id_idx ON documents(owner_id);
+
+CREATE TABLE IF NOT EXISTS document_permissions (
+  doc_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  permission TEXT NOT NULL CHECK (permission IN ('editor', 'viewer')),
+  granted_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+  created_at BIGINT NOT NULL,
+  PRIMARY KEY (doc_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS document_permissions_user_id_idx ON document_permissions(user_id);
 
 CREATE TABLE IF NOT EXISTS doc_snapshots (
   id TEXT PRIMARY KEY,
@@ -23,12 +48,3 @@ CREATE TABLE IF NOT EXISTS doc_updates (
 );
 
 ALTER TABLE doc_updates ADD COLUMN IF NOT EXISTS user_id TEXT;
-
-CREATE TABLE IF NOT EXISTS users (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  role TEXT NOT NULL DEFAULT 'user',
-  created_at BIGINT NOT NULL
-);

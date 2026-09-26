@@ -13,6 +13,7 @@ import {
 import TiptapEditor from '../TiptapEditor'
 import TimeMachinePanel from './TimeMachinePanel'
 import DiagnosticsPanel from './DiagnosticsPanel'
+import DocumentSharingPanel from './DocumentSharingPanel'
 import { getAuthSession } from '../auth/authStorage'
 import type { AuthUser } from '../auth/authApi'
 import type { JSONContent } from '@tiptap/core'
@@ -23,6 +24,8 @@ import type {
   ProviderSyncStatus,
 } from '../providers/CustomYjsWebSocketProvider'
 import './Editor.css'
+
+type DocumentPermission = 'owner' | 'editor' | 'viewer'
 
 function Editor() {
   const { docId } = useParams<{ docId: string }>()
@@ -37,8 +40,14 @@ function Editor() {
   const [currentUser] = useState<AuthUser | null>(() => getAuthSession()?.user ?? null)
   const [editorDiagnostics, setEditorDiagnostics] = useState<EditorDiagnostics | null>(null)
   const [historySessions, setHistorySessions] = useState<HistorySession[]>([])
+  const [documentPermission, setDocumentPermission] = useState<DocumentPermission | 'loading' | 'denied'>('loading')
+  const [accessRefreshCount, setAccessRefreshCount] = useState(0)
   const [restoreRequest, setRestoreRequest] = useState<{ id: number; content: JSONContent } | null>(null)
   const nextRestoreId = useRef(0)
+
+  const refreshDocumentAccess = useCallback(() => {
+    setAccessRefreshCount((count) => count + 1)
+  }, [])
 
   const requestRestore = useCallback((content: JSONContent) => {
     setRestoreRequest({ id: ++nextRestoreId.current, content })
@@ -65,29 +74,42 @@ function Editor() {
           : 'Disconnected'
 
   useEffect(() => {
-    if (!docId) return
+    if (!docId) {
+      setDocumentPermission('denied')
+      return
+    }
 
     let isCurrent = true
+    setDocumentPermission('loading')
     const token = getAuthSession()?.token
     fetch('/api/documents', {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     })
       .then(async (response) => {
         if (!response.ok) throw new Error('Failed to load documents')
-        return response.json() as Promise<Array<{ id: string; title: string }>>
+        return response.json() as Promise<Array<{
+          id: string
+          title: string
+          permission: DocumentPermission
+        }>>
       })
       .then((documents) => {
         const document = documents.find((item) => item.id === docId)
-        if (isCurrent && document) setTitle(document.title)
+        if (isCurrent && document) {
+          setTitle(document.title)
+          setDocumentPermission(document.permission)
+        } else if (isCurrent) {
+          setDocumentPermission('denied')
+        }
       })
       .catch(() => {
-        if (isCurrent) setTitle('Untitled')
+        if (isCurrent) setDocumentPermission('denied')
       })
 
     return () => {
       isCurrent = false
     }
-  }, [docId])
+  }, [accessRefreshCount, docId])
 
   if (!docId) {
     return (
@@ -99,6 +121,24 @@ function Editor() {
       </div>
     )
   }
+
+  if (documentPermission === 'loading') {
+    return <div className="loading-state">Checking document access...</div>
+  }
+
+  if (documentPermission === 'denied') {
+    return (
+      <div className="error-state">
+        <h2>Document unavailable</h2>
+        <p>You do not have access to this document.</p>
+        <button className="btn-primary" onClick={() => navigate('/documents')}>
+          Back to Documents
+        </button>
+      </div>
+    )
+  }
+
+  const canEdit = documentPermission === 'owner' || documentPermission === 'editor'
 
   return (
     <div className="editor-page">
@@ -145,6 +185,7 @@ function Editor() {
             <input
               type="checkbox"
               checked={offlineMode}
+              disabled={!canEdit}
               onChange={(event) => setOfflineMode(event.target.checked)}
             />
             Offline Mode
@@ -171,17 +212,20 @@ function Editor() {
         <button
           className="simulator-reconnect"
           type="button"
-          disabled={!offlineMode}
+          disabled={!offlineMode || !canEdit}
           onClick={() => setOfflineMode(false)}
         >
           Reconnect and sync
         </button>
       </section>
 
+      {documentPermission === 'owner' && <DocumentSharingPanel docId={docId} />}
+
       <TimeMachinePanel
         docId={docId}
         currentText={currentDocumentText}
         onRestore={requestRestore}
+        canRestore={canEdit}
         onSessionsChange={setHistorySessions}
       />
       <DiagnosticsPanel
@@ -196,7 +240,9 @@ function Editor() {
           docId={docId}
           className="embedded-tiptap-editor"
           offlineMode={offlineMode}
+          editable={canEdit}
           onConnectionStatusChange={setConnectionStatus}
+          onPermissionsInvalidated={refreshDocumentAccess}
           onDiagnosticsChange={setEditorDiagnostics}
           onDocumentTextChange={setCurrentDocumentText}
           restoreRequest={restoreRequest}
@@ -211,7 +257,7 @@ function Editor() {
                 onClick={() => editor?.chain().focus().toggleBold().run()}
                 title="Bold (Ctrl+B)"
                 aria-label="Bold"
-                disabled={!editor}
+                disabled={!editor || !canEdit}
               >
                 <Bold size={16} />
               </button>
@@ -221,7 +267,7 @@ function Editor() {
                 onClick={() => editor?.chain().focus().toggleItalic().run()}
                 title="Italic (Ctrl+I)"
                 aria-label="Italic"
-                disabled={!editor}
+                disabled={!editor || !canEdit}
               >
                 <Italic size={16} />
               </button>
@@ -231,7 +277,7 @@ function Editor() {
                 onClick={() => editor?.chain().focus().toggleStrike().run()}
                 title="Strikethrough"
                 aria-label="Strikethrough"
-                disabled={!editor}
+                disabled={!editor || !canEdit}
               >
                 <Strikethrough size={16} />
               </button>
@@ -241,7 +287,7 @@ function Editor() {
                 onClick={() => editor?.chain().focus().toggleCode().run()}
                 title="Code (Ctrl+E)"
                 aria-label="Code"
-                disabled={!editor}
+                disabled={!editor || !canEdit}
               >
                 <Code size={16} />
               </button>
@@ -252,7 +298,7 @@ function Editor() {
                 onClick={() => editor?.chain().focus().toggleBulletList().run()}
                 title="Bullet List"
                 aria-label="Bullet list"
-                disabled={!editor}
+                disabled={!editor || !canEdit}
               >
                 <List size={16} />
               </button>
@@ -262,7 +308,7 @@ function Editor() {
                 onClick={() => editor?.chain().focus().toggleOrderedList().run()}
                 title="Numbered List"
                 aria-label="Numbered list"
-                disabled={!editor}
+                disabled={!editor || !canEdit}
               >
                 <ListOrdered size={16} />
               </button>

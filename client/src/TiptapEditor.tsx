@@ -49,7 +49,9 @@ export type TiptapEditorProps = {
     className?: string;
     docId?: string;
     offlineMode?: boolean;
+    editable?: boolean;
     onConnectionStatusChange?: (status: ProviderStatus) => void;
+    onPermissionsInvalidated?: () => void;
     onDiagnosticsChange?: (diagnostics: EditorDiagnostics) => void;
     onDocumentTextChange?: (text: string) => void;
     restoreRequest?: { id: number; content: JSONContent } | null;
@@ -107,7 +109,9 @@ export default function TiptapEditor({
     className,
     docId = DOCUMENT_ID,
     offlineMode = false,
+    editable = true,
     onConnectionStatusChange,
+    onPermissionsInvalidated,
     onDiagnosticsChange,
     onDocumentTextChange,
     restoreRequest,
@@ -132,15 +136,17 @@ export default function TiptapEditor({
             onOfflineEditCountChange,
             onSyncStatusChange,
         );
+        activeProvider.onPermissionsInvalidated = onPermissionsInvalidated;
         setProvider(activeProvider);
         return () => {
             activeProvider.onStatusChange = undefined;
+            activeProvider.onPermissionsInvalidated = undefined;
             activeProvider.onDiagnosticsChange = undefined;
             activeProvider.onOfflineEditCountChange = undefined;
             activeProvider.onSyncStatusChange = undefined;
             activeProvider.destroy();
         };
-    }, [docId, onConnectionStatusChange, onOfflineEditCountChange, onSyncStatusChange, ydoc]);
+    }, [docId, onConnectionStatusChange, onOfflineEditCountChange, onPermissionsInvalidated, onSyncStatusChange, ydoc]);
 
     useLayoutEffect(() => {
         provider?.setOfflineMode(offlineMode);
@@ -164,8 +170,8 @@ export default function TiptapEditor({
             Placeholder.configure({ placeholder: 'Start writing here...' }),
             ...(collaborationCaret ? [collaborationCaret] : []),
         ],
-        editable: true,
-    }, [provider]);
+        editable,
+    }, [provider, editable]);
 
     useEffect(() => {
         if (!provider) {
@@ -224,14 +230,14 @@ export default function TiptapEditor({
     }, [editor, onDocumentTextChange, ydoc]);
 
     useEffect(() => {
-        if (!editor || !restoreRequest) {
+        if (!editor || !restoreRequest || !editable) {
             return;
         }
 
         editor.commands.setContent(restoreRequest.content, { emitUpdate: true });
         onDocumentTextChange?.(editor.getText());
         onRestoreApplied?.(restoreRequest.id);
-    }, [editor, onDocumentTextChange, onRestoreApplied, restoreRequest]);
+    }, [editable, editor, onDocumentTextChange, onRestoreApplied, restoreRequest]);
 
     const toolbarState = useEditorState({
         editor,
@@ -265,7 +271,7 @@ export default function TiptapEditor({
                         <ToolbarButton
                             label="Paragraph"
                             active={toolbarState.paragraph}
-                            disabled={!editor}
+                            disabled={!editor || !editable}
                             onClick={() => editor?.chain().focus().setParagraph().run()}
                         >
                             P
@@ -273,7 +279,7 @@ export default function TiptapEditor({
                         <ToolbarButton
                             label="Heading 1"
                             active={toolbarState.heading1}
-                            disabled={!editor}
+                            disabled={!editor || !editable}
                             onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
                         >
                             H1
@@ -281,7 +287,7 @@ export default function TiptapEditor({
                         <ToolbarButton
                             label="Heading 2"
                             active={toolbarState.heading2}
-                            disabled={!editor}
+                            disabled={!editor || !editable}
                             onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
                         >
                             H2
@@ -289,7 +295,7 @@ export default function TiptapEditor({
                         <ToolbarButton
                             label="Heading 3"
                             active={toolbarState.heading3}
-                            disabled={!editor}
+                            disabled={!editor || !editable}
                             onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
                         >
                             H3
@@ -300,7 +306,7 @@ export default function TiptapEditor({
                         <ToolbarButton
                             label="Bold"
                             active={toolbarState.bold}
-                            disabled={!editor}
+                            disabled={!editor || !editable}
                             onClick={() => editor?.chain().focus().toggleBold().run()}
                         >
                             <strong>B</strong>
@@ -308,7 +314,7 @@ export default function TiptapEditor({
                         <ToolbarButton
                             label="Italic"
                             active={toolbarState.italic}
-                            disabled={!editor}
+                            disabled={!editor || !editable}
                             onClick={() => editor?.chain().focus().toggleItalic().run()}
                         >
                             <em>I</em>

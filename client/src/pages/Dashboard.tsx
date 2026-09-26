@@ -8,6 +8,7 @@ interface Document {
   id: string
   title: string
   updated_at: number
+  permission: 'owner' | 'editor' | 'viewer'
 }
 
 function Dashboard() {
@@ -124,7 +125,7 @@ function Dashboard() {
                   <FileText size={20} />
                   <div className="document-info">
                     <h3 className="document-title">{doc.title}</h3>
-                    <p className="document-meta">{formatTime(doc.updated_at)}</p>
+                    <p className="document-meta">{formatTime(doc.updated_at)} · {doc.permission}</p>
                   </div>
                 </div>
               ))}

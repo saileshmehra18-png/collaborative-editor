@@ -47,6 +47,7 @@ export class CustomYjsWebSocketProvider {
     readonly awareness: Awareness;
     status: ProviderStatus = 'connecting';
     onStatusChange?: (status: ProviderStatus) => void;
+    onPermissionsInvalidated?: () => void;
     onOfflineEditCountChange?: (count: number) => void;
     onSyncStatusChange?: (status: ProviderSyncStatus) => void;
     onDiagnosticsChange?: () => void;
@@ -258,6 +259,9 @@ export class CustomYjsWebSocketProvider {
         this.setStatus('disconnected');
         this.setSyncStatus('idle');
         this.notifyDiagnosticsChange();
+        if (event.code === 1008) {
+            this.onPermissionsInvalidated?.();
+        }
         this.scheduleReconnect();
     };
 
