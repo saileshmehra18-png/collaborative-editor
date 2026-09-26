@@ -15,6 +15,7 @@
         "@tiptap/starter-kit": "^3.31.3",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
+        "y-protocols": "^1.0.7",
         "yjs": "^13.6.33"
     },
     "devDependencies": {
