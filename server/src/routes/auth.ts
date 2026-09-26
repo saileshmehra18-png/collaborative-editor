@@ -9,10 +9,14 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-router.post("/signup", async (req, res) => {
+router.post("/register", async (req, res) => {
   const { name, email, password } = req.body ?? {};
 
-  if (!name || !email || !password) {
+  if (
+    typeof name !== "string" || !name.trim() ||
+    typeof email !== "string" || !email ||
+    typeof password !== "string" || !password
+  ) {
     return res.status(400).json({ error: "name, email, and password are required" });
   }
   if (!isValidEmail(email)) {
@@ -42,7 +46,7 @@ router.post("/signup", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { email, password } = req.body ?? {};
 
-  if (!email || !password) {
+  if (typeof email !== "string" || !email || typeof password !== "string" || !password) {
     return res.status(400).json({ error: "email and password are required" });
   }
 

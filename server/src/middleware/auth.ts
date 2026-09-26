@@ -12,7 +12,10 @@ export function requireAuth(req: AuthedRequest, res: Response, next: NextFunctio
   }
   try {
     const payload = verifyToken(header.slice(7));
-    req.user = payload;
+    if (typeof payload === "string" || typeof payload.id !== "string" || typeof payload.role !== "string") {
+      return res.status(401).json({ error: "invalid or expired token" });
+    }
+    req.user = { id: payload.id, role: payload.role };
     next();
   } catch {
     return res.status(401).json({ error: "invalid or expired token" });
