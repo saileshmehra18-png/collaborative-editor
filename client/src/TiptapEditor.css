@@ -134,6 +134,31 @@
     padding-left: 24px;
 }
 
+.collaboration-carets__caret {
+    position: relative;
+    margin-inline: -1px;
+    border-left: 2px solid;
+    border-right: 2px solid;
+    pointer-events: none;
+    overflow-wrap: normal;
+}
+
+.collaboration-carets__label {
+    position: absolute;
+    z-index: 1;
+    top: -1.45em;
+    left: -2px;
+    padding: 1px 5px;
+    border-radius: 3px 3px 3px 0;
+    color: #fff;
+    font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    user-select: none;
+}
+
 @media (max-width: 520px) {
     .editor-toolbar {
         gap: 5px;

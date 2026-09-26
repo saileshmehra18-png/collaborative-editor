@@ -1,9 +1,11 @@
 import Collaboration from '@tiptap/extension-collaboration';
+import CollaborationCaret from '@tiptap/extension-collaboration-caret';
 import { useEditor, useEditorState, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import * as Y from 'yjs';
+import { getAuthSession } from './auth/authStorage';
 import {
     CustomYjsWebSocketProvider,
     type ProviderStatus,
@@ -11,6 +13,26 @@ import {
 import './TiptapEditor.css';
 
 const DOCUMENT_ID = 'doc_7a9c3e';
+const CURSOR_COLORS = [
+    '#176B5B',
+    '#A34222',
+    '#2456A6',
+    '#8C3A63',
+    '#6650A4',
+    '#3E6B32',
+    '#9B3D2D',
+    '#176B78',
+];
+
+function getCursorColor(userId: string): string {
+    let hash = 0;
+    for (const character of userId) {
+        hash = (hash * 31 + character.charCodeAt(0)) | 0;
+    }
+
+    return CURSOR_COLORS[Math.abs(hash) % CURSOR_COLORS.length];
+}
+
 const STATUS_LABELS: Record<ProviderStatus, string> = {
     connecting: 'Connecting',
     connected: 'Connected',
@@ -54,31 +76,45 @@ function ToolbarButton({
 
 export default function TiptapEditor({ className }: TiptapEditorProps) {
     const [ydoc] = useState(() => new Y.Doc());
+    const [provider, setProvider] = useState<CustomYjsWebSocketProvider | null>(null);
+    const [authenticatedUser] = useState(() => getAuthSession()?.user ?? null);
     const [connectionStatus, setConnectionStatus] = useState<ProviderStatus>('connecting');
 
     useEffect(() => {
-        const provider = new CustomYjsWebSocketProvider(
+        const activeProvider = new CustomYjsWebSocketProvider(
             ydoc,
             DOCUMENT_ID,
             setConnectionStatus,
         );
+        setProvider(activeProvider);
         return () => {
-            provider.onStatusChange = undefined;
-            provider.destroy();
+            activeProvider.onStatusChange = undefined;
+            activeProvider.destroy();
         };
     }, [ydoc]);
+
+    const collaborationCaret = provider && authenticatedUser
+        ? CollaborationCaret.configure({
+            provider,
+            user: {
+                name: authenticatedUser.name,
+                color: getCursorColor(authenticatedUser.id || authenticatedUser.email),
+            },
+        })
+        : null;
 
     const editor = useEditor({
         extensions: [
             StarterKit.configure({ undoRedo: false }),
             Collaboration.configure({ document: ydoc }),
+            ...(collaborationCaret ? [collaborationCaret] : []),
         ],
         onCreate: ({ editor: createdEditor }) => {
             if (ydoc.getXmlFragment('default').length === 0) {
                 createdEditor.commands.setContent('<p>Start writing here...</p>');
             }
         },
-    });
+    }, [provider]);
 
     const toolbarState = useEditorState({
         editor,
