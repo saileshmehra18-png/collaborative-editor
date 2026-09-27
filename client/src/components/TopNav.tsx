@@ -43,13 +43,7 @@ export function TopNav({ connectionStatus, currentDoc, isDashboard }: TopNavProp
 
         <div className="top-nav-center">
           <button className={`tab-btn ${isDashboard ? 'active' : ''}`} onClick={() => navigate('/documents')}>All Documents</button>
-          <button
-            className={`tab-btn ${!isDashboard ? 'active' : ''}`}
-            disabled={isDashboard}
-            onClick={() => currentDoc && navigate(`/documents/${currentDoc.id}`)}
-          >
-            Active Document
-          </button>
+
         </div>
 
         <div className="top-nav-right">

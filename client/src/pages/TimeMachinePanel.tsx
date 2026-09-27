@@ -199,10 +199,10 @@ export default function TimeMachinePanel({
     ) ?? null;
 
     return (
-        <details className="time-machine-panel">
+        <details className="feature-panel time-machine-panel-override">
             <summary>
-                <span>Time Machine</span>
-                <span className="time-machine-count">
+                <span className="panel-title">Time Machine</span>
+                <span className="panel-meta">
                     {sessions.length} sessions · {sessions.reduce((count, session) => count + session.checkpoints.length, 0)} checkpoints
                 </span>
             </summary>

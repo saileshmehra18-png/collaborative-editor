@@ -1,18 +1,6 @@
-.time-machine-panel {
-    margin: 0 var(--space-xl) var(--space-md);
-    border: 1px solid var(--outline-variant);
-    border-radius: var(--radius);
-    background: var(--surface-container-lowest);
-}
 
-.time-machine-panel>summary {
-    display: flex;
-    justify-content: space-between;
-    padding: var(--space-sm) var(--space-md);
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-}
+
+
 
 .time-machine-session-list {
     border-top: 1px solid var(--outline-variant);
@@ -49,9 +37,10 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-md);
-    padding: 0 var(--space-md) var(--space-sm);
-    color: var(--on-surface-variant);
-    font-size: 11px;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--border-default, #e2e8f0);
+    color: var(--text-secondary);
+    font-size: 0.875rem;
 }
 
 .time-machine-toolbar button {
