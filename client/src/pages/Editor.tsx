@@ -52,6 +52,7 @@ export default function Editor() {
     const [shareMessage, setShareMessage] = useState('');
     const [shareBusy, setShareBusy] = useState(false);
     const [diagOpen, setDiagOpen] = useState(false);
+    const [showHelp, setShowHelp] = useState(false);
 
     useEffect(() => {
         if (!docId) return;
@@ -131,12 +132,12 @@ export default function Editor() {
         <div className="editor-page">
             <nav className="editor-top-nav">
                 <div className="nav-left">
-                    <div className="nav-logo" onClick={() => navigate('/documents')} title="Dashboard">
+                    <button className="nav-logo" onClick={() => navigate('/documents')} aria-label="Go to Documents" title="Dashboard">
                         <FileText size={18} />
                         <span>Collaborative Editor</span>
-                    </div>
+                    </button>
                     <div className="nav-breadcrumbs">
-                        <span onClick={() => navigate('/documents')}>Documents</span>
+                        <button className="nav-btn-text" onClick={() => navigate('/documents')}>Documents</button>
                         <span className="separator">/</span>
                         <span className="current">{document.title}</span>
                     </div>
@@ -144,7 +145,7 @@ export default function Editor() {
                 <div className="nav-right">
                     <span className="user-profile">{session?.user.name || 'User'}</span>
                     <button className="nav-btn-text" onClick={() => { clearAuthSession(); navigate('/login', { replace: true }); }}>Sign out</button>
-                    <button className="nav-btn-icon" title="Help"><HelpCircle size={18} /></button>
+                    <button className="nav-btn-icon" title="Help" onClick={() => setShowHelp(true)}><HelpCircle size={18} /></button>
                 </div>
             </nav>
 
@@ -296,6 +297,30 @@ export default function Editor() {
                             <p className="share-owner-text">You own this document and have full access.</p>
                         </div>
                     </section>
+                </div>
+            )}
+
+            {showHelp && (
+                <div className="modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) setShowHelp(false) }}>
+                    <div className="modal-card help-modal">
+                        <div className="modal-header">
+                            <h2 className="modal-title">About Collaborative Editor</h2>
+                            <button className="modal-close" onClick={() => setShowHelp(false)} aria-label="Close">×</button>
+                        </div>
+                        <div className="modal-body">
+                            <p>Welcome to the <strong>Collaborative Editor</strong>. This application is designed to demonstrate robust real-time synchronization using CRDTs (Conflict-free Replicated Data Types).</p>
+                            <ul className="help-feature-list" style={{ marginTop: '1rem', paddingLeft: '1.25rem', color: 'var(--text-secondary)' }}>
+                                <li style={{ marginBottom: '0.75rem' }}><strong>Real-time Collaboration:</strong> Edit documents simultaneously with other users. Changes sync instantly via WebSockets.</li>
+                                <li style={{ marginBottom: '0.75rem' }}><strong>Version History (Time Machine):</strong> Automatically tracks sessions. Preview, compare, and restore previous versions seamlessly.</li>
+                                <li style={{ marginBottom: '0.75rem' }}><strong>Conflict Simulator:</strong> Test offline capabilities. Disconnect, make local edits, and watch them merge perfectly when you reconnect.</li>
+                                <li style={{ marginBottom: '0.75rem' }}><strong>Diagnostics:</strong> Inspect real-time data flow, including vector clocks, awareness (cursors/presence), and persistence ACKs.</li>
+                                <li style={{ marginBottom: '0.75rem' }}><strong>Permissions & Sharing:</strong> Granular Owner, Editor, and Viewer access controls to secure your documents.</li>
+                            </ul>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn-primary" onClick={() => setShowHelp(false)}>Close</button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

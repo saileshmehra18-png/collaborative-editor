@@ -159,3 +159,27 @@
   font-size: 11px;
   font-family: var(--font-mono);
 }
+
+.tab-btn:disabled {
+  cursor: not-allowed;
+}
+
+.help-feature-list {
+  margin-top: 1rem;
+  padding-left: 1.25rem;
+  font-size: 0.938rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.help-feature-list li {
+  margin-bottom: 0.75rem;
+}
+
+.help-feature-list strong {
+  color: var(--text-primary);
+}
+
+.help-modal {
+  max-width: 500px;
+}
