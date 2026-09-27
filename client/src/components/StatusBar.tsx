@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { API_BASE, WS_URL } from '../config';
 import './StatusBar.css';
 
 interface StatusBarProps {
@@ -10,8 +9,8 @@ interface StatusBarProps {
 
 export const StatusBar: React.FC<StatusBarProps> = ({
   wsConnected,
-  apiEndpoint = `${API_BASE}/api`,
-  wsEndpoint = WS_URL,
+  apiEndpoint,
+  wsEndpoint,
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [lastSyncTime, setLastSyncTime] = useState(new Date());

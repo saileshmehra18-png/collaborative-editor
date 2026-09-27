@@ -27,10 +27,9 @@ export function SecondaryHeader({
         
         <button className="doc-selector">
           <span className="doc-title">{docTitle}</span>
-          <ChevronDown size={14} />
         </button>
         
-        <button className="doc-id-btn" title="Copy document ID">
+        <button className="doc-id-btn" title="Copy document ID" onClick={() => navigator.clipboard.writeText(docId)}>
           <span className="text-mono doc-id">{docId}</span>
           <Copy size={12} />
         </button>
@@ -43,12 +42,6 @@ export function SecondaryHeader({
         </div>
 
         <div className="online-count">
-          <div className="avatar-mini-group">
-            <div className="avatar-mini" style={{ background: '#6366f1' }}>AM</div>
-            <div className="avatar-mini" style={{ background: '#8b5cf6' }}>SK</div>
-            <div className="avatar-mini" style={{ background: '#ec4899' }}>DL</div>
-            <div className="avatar-mini" style={{ background: '#f59e0b' }}>ER</div>
-          </div>
           <span className="online-text">{onlineCount} online</span>
         </div>
 

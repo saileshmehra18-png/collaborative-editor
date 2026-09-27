@@ -15,6 +15,7 @@ export async function getDocumentPermission(
     );
     const document = result.rows[0];
     if (!document) return null;
+    if (document.owner_id === null) return "editor"; // Legacy public documents
     if (document.owner_id === userId) return "owner";
     return document.permission;
 }

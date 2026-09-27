@@ -462,7 +462,7 @@
 .peer-list { display:flex; }.peer-list span { display:grid; place-items:center; width:27px; height:27px; margin-left:-6px; border:2px solid var(--surface-container-lowest); border-radius:50%; color:white; font-size:11px; }
 .collab-editor .tiptap-editor { margin:0 auto; padding:0 clamp(12px, 4vw, 48px); }
 .collab-editor .editor-toolbar { position:sticky; top:0; z-index:2; border:1px solid var(--outline-variant); border-radius:10px 10px 0 0; }
-.collab-editor .editor-content { max-width:920px; min-height:440px; margin:0 auto; padding:38px clamp(22px, 7vw, 80px); border-radius:0 0 10px 10px; }
+.collab-editor .editor-content { position:relative; z-index:1; background:var(--surface-container-lowest); max-width:920px; min-height:440px; margin:0 auto; padding:38px clamp(22px, 7vw, 80px); border-radius:0 0 10px 10px; border:1px solid var(--outline-variant); border-top:none; }
 .editor-panels { display:grid; gap:10px; max-width:1100px; margin:22px auto; padding:0 clamp(12px, 4vw, 48px); }
 .feature-panel { border:1px solid var(--outline-variant); border-radius:10px; background:var(--surface-container-lowest); }
 .feature-panel>summary { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:15px 18px; cursor:pointer; font-size:14px; font-weight:650; }

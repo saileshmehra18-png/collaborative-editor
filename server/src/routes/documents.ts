@@ -116,7 +116,7 @@ router.get("/", async (req, res) => {
     updated_at: string;
     permission: "owner" | "editor" | "viewer";
   }>(
-    "SELECT documents.id, documents.title, documents.updated_at, CASE WHEN documents.owner_id = $1 THEN 'owner' ELSE document_permissions.permission END AS permission FROM documents LEFT JOIN document_permissions ON document_permissions.doc_id = documents.id AND document_permissions.user_id = $1 WHERE documents.owner_id = $1 OR document_permissions.permission IS NOT NULL ORDER BY documents.updated_at DESC",
+    "SELECT documents.id, documents.title, documents.updated_at, CASE WHEN documents.owner_id = $1 THEN 'owner' WHEN documents.owner_id IS NULL THEN 'editor' ELSE document_permissions.permission END AS permission FROM documents LEFT JOIN document_permissions ON document_permissions.doc_id = documents.id AND document_permissions.user_id = $1 WHERE documents.owner_id = $1 OR documents.owner_id IS NULL OR document_permissions.permission IS NOT NULL ORDER BY documents.updated_at DESC",
     [userId],
   );
   res.json(result.rows.map((document) => ({
