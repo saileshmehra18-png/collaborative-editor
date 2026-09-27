@@ -3,6 +3,7 @@ import * as Y from "yjs";
 import * as awarenessProtocol from "y-protocols/awareness";
 import { loadDocState, saveUpdate } from "../services/persistence";
 import { verifyToken } from "../services/auth";
+import { canEditDocument, getDocumentPermission, type DocumentPermission } from "../services/permissions";
 
 const docs = new Map<string, Y.Doc>();
 const pendingDocs = new Map<string, Promise<Y.Doc>>();
@@ -12,6 +13,8 @@ const updateQueues = new Map<string, Promise<void>>();
 const persistenceFailures = new Map<string, unknown>();
 // Track which WebSocket owns which clientIDs for cleanup
 const wsToClientIds = new Map<WebSocket, Set<number>>();
+const wsToUserIds = new Map<WebSocket, string>();
+const wsToPermissions = new Map<WebSocket, DocumentPermission>();
 let webSocketServer: WebSocketServer | undefined;
 let isShuttingDown = false;
 
@@ -122,6 +125,14 @@ export async function shutdownWebSocketServer(): Promise<void> {
   await Promise.all(updateQueues.values());
 }
 
+export function closeDocumentConnectionsForUser(docId: string, userId: string): void {
+  for (const ws of conns.get(docId) ?? []) {
+    if (wsToUserIds.get(ws) === userId && ws.readyState === WebSocket.OPEN) {
+      ws.close(1008, "document permissions changed");
+    }
+  }
+}
+
 function broadcast(docId: string, update: Uint8Array, origin: WebSocket) {
   const peers = conns.get(docId);
   if (!peers) return;
@@ -179,12 +190,23 @@ export function attachWsServer(server: any) {
       return;
     }
 
+    let permission = userId ? await getDocumentPermission(docId, userId) : null;
+    if (!permission) {
+      ws.close(1008, "document access denied");
+      return;
+    }
+
     let ydoc: Y.Doc;
     try {
       ydoc = await getOrCreateDoc(docId);
     } catch (error) {
       console.error(`Failed to load document ${docId}`, error);
       ws.close(1011, "document could not be loaded");
+      return;
+    }
+    permission = userId ? await getDocumentPermission(docId, userId) : null;
+    if (!permission) {
+      ws.close(1008, "document access denied");
       return;
     }
     if (isShuttingDown) {
@@ -197,6 +219,8 @@ export function attachWsServer(server: any) {
     }
     const aw = awareness.get(docId)!;
     conns.get(docId)!.add(ws);
+    wsToUserIds.set(ws, userId!);
+    wsToPermissions.set(ws, permission);
 
     // Send initial document state
     ws.send(JSON.stringify({
@@ -229,6 +253,10 @@ export function attachWsServer(server: any) {
       }
 
       if (msg.type === "update") {
+        if (!canEditDocument(wsToPermissions.get(ws) ?? null)) {
+          ws.close(1008, "document write permission required");
+          return;
+        }
         const update = new Uint8Array(msg.update);
         const updateId = Number.isSafeInteger(msg.id) ? msg.id as number : undefined;
         queueYjsUpdate(docId, ydoc, update, ws, updateId, userId);
@@ -248,6 +276,8 @@ export function attachWsServer(server: any) {
         awarenessProtocol.removeAwarenessStates(aw, Array.from(clientIds), ws);
       }
       wsToClientIds.delete(ws);
+      wsToUserIds.delete(ws);
+      wsToPermissions.delete(ws);
     });
   });
 }

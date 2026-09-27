@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TopNav } from '../components/TopNav'
 import { API_BASE } from '../config'
+import { getAuthSession } from '../auth/authStorage'
 import './Dashboard.css'
 
 interface Document {
   id: string
   title: string
   updated_at: number
+  permission: 'owner' | 'editor' | 'viewer'
 }
 
 function Dashboard() {
@@ -18,7 +20,7 @@ function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
 
-  const userName = localStorage.getItem('userName') || 'Anonymous'
+  const userName = getAuthSession()?.user.name || 'Anonymous'
 
   useEffect(() => {
     loadDocuments()
@@ -26,15 +28,13 @@ function Dashboard() {
 
   async function loadDocuments() {
     try {
-      const token = localStorage.getItem('token')
+      const token = getAuthSession()?.token
       const res = await fetch(`${API_BASE}/api/documents`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       })
-      
-      if (res.ok) {
-        const data = await res.json()
-        setDocuments(data)
-      }
+      if (!res.ok) throw new Error(`Failed to load documents: ${res.status}`)
+      const data = await res.json() as Document[]
+      setDocuments(data)
     } catch (error) {
       console.error('Failed to load documents:', error)
     } finally {
@@ -44,7 +44,7 @@ function Dashboard() {
 
   async function createDocument() {
     try {
-      const token = localStorage.getItem('token')
+      const token = getAuthSession()?.token
       const res = await fetch(`${API_BASE}/api/documents`, {
         method: 'POST',
         headers: {
@@ -53,11 +53,11 @@ function Dashboard() {
         },
         body: JSON.stringify({ title: newDocTitle || 'Untitled Document' })
       })
-      
+
       if (!res.ok) {
         throw new Error(`Failed to create document: ${res.status}`)
       }
-      
+
       const doc = await res.json()
       setShowCreateModal(false)
       setNewDocTitle('')
@@ -105,7 +105,7 @@ function Dashboard() {
             </p>
             <button className="btn-create-large" onClick={() => setShowCreateModal(true)}>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
               Create New Document
             </button>
@@ -120,8 +120,8 @@ function Dashboard() {
             </div>
             <div className="search-box">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5"/>
-                <path d="M11 11l3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M11 11l3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
               <input
                 type="text"
@@ -149,7 +149,7 @@ function Dashboard() {
               {!searchQuery && (
                 <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                   </svg>
                   Create Document
                 </button>
@@ -166,15 +166,15 @@ function Dashboard() {
                   <div className="card-header">
                     <div className="card-icon">
                       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <path d="M4 3h8l4 4v10a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.5"/>
-                        <path d="M12 3v4h4" stroke="currentColor" strokeWidth="1.5"/>
+                        <path d="M4 3h8l4 4v10a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.5" />
+                        <path d="M12 3v4h4" stroke="currentColor" strokeWidth="1.5" />
                       </svg>
                     </div>
                     <div className="card-menu">
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <circle cx="8" cy="3" r="1.5" fill="currentColor"/>
-                        <circle cx="8" cy="8" r="1.5" fill="currentColor"/>
-                        <circle cx="8" cy="13" r="1.5" fill="currentColor"/>
+                        <circle cx="8" cy="3" r="1.5" fill="currentColor" />
+                        <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+                        <circle cx="8" cy="13" r="1.5" fill="currentColor" />
                       </svg>
                     </div>
                   </div>
@@ -183,10 +183,10 @@ function Dashboard() {
                     <p className="card-meta">
                       <span className="meta-item">
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                          <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
-                          <path d="M7 3.5v4l2.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                          <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5" />
+                          <path d="M7 3.5v4l2.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                         </svg>
-                        {formatTime(doc.updated_at)}
+                        {formatTime(doc.updated_at)} · {doc.permission}
                       </span>
                     </p>
                   </div>
@@ -212,7 +212,7 @@ function Dashboard() {
               <h2 className="modal-title">Create New Document</h2>
               <button className="modal-close" onClick={() => setShowCreateModal(false)}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
               </button>
             </div>
@@ -237,7 +237,7 @@ function Dashboard() {
               </button>
               <button className="btn-primary" onClick={createDocument}>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
                 Create Document
               </button>
