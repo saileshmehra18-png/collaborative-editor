@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TopNav } from '../components/TopNav'
+import { API_BASE } from '../config'
 import './Dashboard.css'
 
 interface Document {
@@ -26,7 +27,7 @@ function Dashboard() {
   async function loadDocuments() {
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch('http://localhost:4000/api/documents', {
+      const res = await fetch(`${API_BASE}/api/documents`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       })
       
@@ -44,7 +45,7 @@ function Dashboard() {
   async function createDocument() {
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch('http://localhost:4000/api/documents', {
+      const res = await fetch(`${API_BASE}/api/documents`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import * as Y from 'yjs'
+import { API_BASE, WS_URL } from '../config'
 import { TopNav } from '../components/TopNav'
 import { SecondaryHeader } from '../components/SecondaryHeader'
 import { TabBar, TabType } from '../components/TabBar'
@@ -31,7 +32,7 @@ function Editor() {
 
     // Load document metadata
     const token = localStorage.getItem('token')
-    fetch(`http://localhost:4000/api/documents`, {
+    fetch(`${API_BASE}/api/documents`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -66,7 +67,7 @@ function Editor() {
 
     const token = localStorage.getItem('token')
     // FIXED: Added /ws path as per main branch backend
-    const ws = new WebSocket(`ws://localhost:4000/ws?docId=${docId}&token=${token}`)
+    const ws = new WebSocket(`${WS_URL}?docId=${docId}&token=${token}`)
     wsRef.current = ws
 
     ws.onopen = () => {
@@ -196,8 +197,8 @@ function Editor() {
 
       <StatusBar
         wsConnected={connectionStatus === 'connected'}
-        apiEndpoint="http://localhost:4000"
-        wsEndpoint="ws://localhost:4000/ws"
+        apiEndpoint={`${API_BASE}/api`}
+        wsEndpoint={WS_URL}
       />
     </div>
   )
