@@ -1,4 +1,4 @@
-import { ChevronDown, Plus, Copy } from 'lucide-react'
+import { Plus, Copy } from 'lucide-react'
 import './SecondaryHeader.css'
 
 interface SecondaryHeaderProps {

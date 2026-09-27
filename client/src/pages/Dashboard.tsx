@@ -21,7 +21,6 @@ function Dashboard() {
   const [error, setError] = useState('')
   const [creating, setCreating] = useState(false)
   const navigate = useNavigate()
-  const userName = getAuthSession()?.user.name || 'Account'
 
   useEffect(() => {
     loadDocuments()
@@ -96,30 +95,21 @@ function Dashboard() {
 
   return (
     <div className="dashboard">
-      <TopNav userName={userName} />
+      <TopNav isDashboard />
 
       <main className="dashboard-main">
-        <div className="dashboard-hero">
-          <div className="hero-content">
-            <h1 className="hero-title">Your Collaborative Workspace</h1>
-            <p className="hero-subtitle">
-              Create, edit, and collaborate on documents in real-time with CRDT-powered synchronization
-            </p>
-            <button className="btn-create-large" onClick={() => setShowCreateModal(true)}>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-              Create New Document
-            </button>
-          </div>
-        </div>
-
         <div className="dashboard-content">
-          <div className="content-header">
-            <div className="header-left">
-              <h2 className="section-title">Recent Documents</h2>
-              <span className="doc-count">{documents.length} total</span>
-            </div>
+          <div className="dashboard-header-row">
+            <h1 className="page-title">Documents</h1>
+          </div>
+
+          <div className="dashboard-actions-row">
+            <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              New Document
+            </button>
             <div className="search-box">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
@@ -132,6 +122,11 @@ function Dashboard() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="content-header">
+            <h2 className="section-title">Recent Documents</h2>
+            <span className="doc-count">{documents.length} total</span>
           </div>
 
           {loading ? (

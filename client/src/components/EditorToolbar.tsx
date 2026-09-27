@@ -6,9 +6,8 @@ import {
   List,
   ListOrdered,
   CheckSquare,
-  Info,
-  Eye,
-  GitBranch
+  Undo,
+  Redo
 } from 'lucide-react'
 import './EditorToolbar.css'
 
@@ -21,19 +20,15 @@ interface EditorToolbarProps {
 }
 
 export function EditorToolbar({ 
-  editor, 
-  showPeerCursors, 
-  onTogglePeerCursors,
-  showCRDTClock,
-  onToggleCRDTClock 
+  editor
 }: EditorToolbarProps) {
   return (
     <div className="editor-toolbar">
-      <div className="toolbar-section">
+      <div className="toolbar-group">
         <button
           className={`toolbar-btn ${editor?.isActive('bold') ? 'active' : ''}`}
           onClick={() => editor?.chain().focus().toggleBold().run()}
-          title="Bold"
+          title="Bold (Cmd+B)"
         >
           <Bold size={16} />
         </button>
@@ -41,7 +36,7 @@ export function EditorToolbar({
         <button
           className={`toolbar-btn ${editor?.isActive('italic') ? 'active' : ''}`}
           onClick={() => editor?.chain().focus().toggleItalic().run()}
-          title="Italic"
+          title="Italic (Cmd+I)"
         >
           <Italic size={16} />
         </button>
@@ -49,7 +44,7 @@ export function EditorToolbar({
         <button
           className={`toolbar-btn ${editor?.isActive('strike') ? 'active' : ''}`}
           onClick={() => editor?.chain().focus().toggleStrike().run()}
-          title="Strikethrough"
+          title="Strikethrough (Cmd+Shift+X)"
         >
           <Strikethrough size={16} />
         </button>
@@ -57,7 +52,7 @@ export function EditorToolbar({
         <button
           className={`toolbar-btn ${editor?.isActive('code') ? 'active' : ''}`}
           onClick={() => editor?.chain().focus().toggleCode().run()}
-          title="Code"
+          title="Code (Cmd+E)"
         >
           <Code size={16} />
         </button>
@@ -65,9 +60,9 @@ export function EditorToolbar({
 
       <div className="toolbar-divider"></div>
 
-      <div className="toolbar-section">
+      <div className="toolbar-group">
         <select 
-          className="heading-select"
+          className="toolbar-select"
           onChange={(e) => {
             const level = parseInt(e.target.value)
             if (level === 0) {
@@ -76,6 +71,11 @@ export function EditorToolbar({
               editor?.chain().focus().toggleHeading({ level }).run()
             }
           }}
+          value={
+            editor?.isActive('heading', { level: 1 }) ? '1' :
+            editor?.isActive('heading', { level: 2 }) ? '2' :
+            editor?.isActive('heading', { level: 3 }) ? '3' : '0'
+          }
         >
           <option value="0">Paragraph</option>
           <option value="1">Heading 1</option>
@@ -86,7 +86,7 @@ export function EditorToolbar({
 
       <div className="toolbar-divider"></div>
 
-      <div className="toolbar-section">
+      <div className="toolbar-group">
         <button
           className={`toolbar-btn ${editor?.isActive('bulletList') ? 'active' : ''}`}
           onClick={() => editor?.chain().focus().toggleBulletList().run()}
@@ -110,32 +110,27 @@ export function EditorToolbar({
         >
           <CheckSquare size={16} />
         </button>
+      </div>
+
+      <div className="toolbar-divider"></div>
+
+      <div className="toolbar-group">
+        <button
+          className="toolbar-btn"
+          onClick={() => editor?.chain().focus().undo().run()}
+          disabled={!editor?.can().undo()}
+          title="Undo"
+        >
+          <Undo size={16} />
+        </button>
         
         <button
           className="toolbar-btn"
-          title="Info"
+          onClick={() => editor?.chain().focus().redo().run()}
+          disabled={!editor?.can().redo()}
+          title="Redo"
         >
-          <Info size={16} />
-        </button>
-      </div>
-
-      <div className="toolbar-spacer"></div>
-
-      <div className="toolbar-section">
-        <button
-          className={`toggle-btn ${showPeerCursors ? 'active' : ''}`}
-          onClick={onTogglePeerCursors}
-        >
-          <Eye size={14} />
-          <span>Show Peer Cursors</span>
-        </button>
-        
-        <button
-          className={`toggle-btn ${showCRDTClock ? 'active' : ''}`}
-          onClick={onToggleCRDTClock}
-        >
-          <GitBranch size={14} />
-          <span>CRDT Vector Clock</span>
+          <Redo size={16} />
         </button>
       </div>
     </div>

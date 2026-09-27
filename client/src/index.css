@@ -5,30 +5,42 @@
 }
 
 :root {
-  /* Colors from design system */
-  --surface: #faf8ff;
-  --surface-dim: #d2d9f4;
-  --surface-bright: #faf8ff;
-  --surface-container-lowest: #ffffff;
-  --surface-container-low: #f2f3ff;
-  --surface-container: #eaedff;
-  --surface-container-high: #e2e7ff;
-  --surface-container-highest: #dae2fd;
-  --on-surface: #131b2e;
-  --on-surface-variant: #464555;
-  --outline: #777587;
-  --outline-variant: #c7c4d8;
-  --primary: #3525cd;
-  --primary-container: #4f46e5;
+  /* Neutral / Clean background for the application */
+  --bg-primary: #f9fafb;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+
+  /* Text */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+
+  /* Accents - Subtle Lavender / Purple */
+  --accent-primary: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-light: rgba(99, 102, 241, 0.1);
+
+  /* Semantic */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+
+  /* Borders & Shadows */
+  --border-default: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  /* Legacy aliases (used by existing components if not updated) */
+  --surface: var(--bg-primary);
+  --surface-container-lowest: var(--bg-secondary);
+  --surface-container-low: var(--bg-primary);
+  --surface-container: var(--bg-tertiary);
+  --on-surface: var(--text-primary);
+  --on-surface-variant: var(--text-secondary);
+  --outline: var(--border-strong);
+  --outline-variant: var(--border-default);
+  --primary: var(--accent-primary);
+  --primary-container: var(--accent-hover);
   --on-primary: #ffffff;
-  --secondary: #006591;
-  --secondary-container: #39b8fd;
-  --tertiary: #005338;
-  --connected: #10B981;
-  --syncing: #F59E0B;
-  --disconnected: #F43F5E;
-  --error: #ba1a1a;
-  --on-error: #ffffff;
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -42,19 +54,17 @@
   --space-xl: 2rem;
 
   /* Radius */
-  --radius-sm: 0.125rem;
-  --radius: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
 }
 
 body {
   font-family: var(--font-family);
   font-size: 14px;
-  line-height: 20px;
-  color: var(--on-surface);
-  background: var(--surface);
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -65,7 +75,7 @@ code, pre {
 
 #root {
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 button {
@@ -75,7 +85,7 @@ button {
   background: none;
 }
 
-input, textarea {
+input, textarea, select {
   font-family: inherit;
 }
 
@@ -91,14 +101,14 @@ a {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--surface-container-low);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--outline-variant);
-  border-radius: var(--radius);
+  background: #cbd5e1;
+  border-radius: var(--radius-sm);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--outline);
+  background: #94a3b8;
 }

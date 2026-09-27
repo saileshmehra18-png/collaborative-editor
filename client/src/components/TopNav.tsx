@@ -1,15 +1,15 @@
-import { FileText, Keyboard, HelpCircle, ChevronDown } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { FileText, HelpCircle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { clearAuthSession } from '../auth/authStorage'
 import './TopNav.css'
 
 interface TopNavProps {
-  connectionStatus: 'connected' | 'connecting' | 'disconnected' | 'error'
-  onlineCount: number
+  connectionStatus?: 'connected' | 'connecting' | 'disconnected' | 'error'
   currentDoc?: { title: string; id: string }
+  isDashboard?: boolean
 }
 
-export function TopNav({ connectionStatus, onlineCount, currentDoc }: TopNavProps) {
+export function TopNav({ connectionStatus, currentDoc, isDashboard }: TopNavProps) {
   const navigate = useNavigate();
 
   const statusConfig = {
@@ -19,7 +19,7 @@ export function TopNav({ connectionStatus, onlineCount, currentDoc }: TopNavProp
     error: { text: 'Error', color: '#ef4444', label: 'error' }
   }
 
-  const status = statusConfig[connectionStatus] || statusConfig.error
+  const status = connectionStatus ? (statusConfig[connectionStatus] || statusConfig.error) : null;
 
   return (
     <div className="top-nav">
@@ -29,24 +29,28 @@ export function TopNav({ connectionStatus, onlineCount, currentDoc }: TopNavProp
           <span className="logo-text">Collaborative Editor</span>
         </div>
         
-        <div className="breadcrumb">
-          <span className="breadcrumb-item" onClick={() => navigate('/documents')}>Documents</span>
-          <span className="breadcrumb-separator">/</span>
-          <span className="breadcrumb-item active">{currentDoc?.title || 'Loading...'}</span>
-        </div>
+        {!isDashboard && (
+          <div className="breadcrumb">
+            <span className="breadcrumb-item" onClick={() => navigate('/documents')}>Documents</span>
+            <span className="breadcrumb-separator">/</span>
+            <span className="breadcrumb-item active">{currentDoc?.title || 'Loading...'}</span>
+          </div>
+        )}
       </div>
 
       <div className="top-nav-center">
-        <button className="tab-btn" onClick={() => navigate('/documents')}>All Documents</button>
-        <button className="tab-btn active">Active Document</button>
+        <button className={`tab-btn ${isDashboard ? 'active' : ''}`} onClick={() => navigate('/documents')}>All Documents</button>
+        <button className={`tab-btn ${!isDashboard ? 'active' : ''}`} disabled={isDashboard}>Active Document</button>
       </div>
 
       <div className="top-nav-right">
-        <div className="connection-indicator" style={{ '--status-color': status.color } as any}>
-          <span className="status-dot"></span>
-          <span className="status-text">{status.text}</span>
-          <span className="status-label text-mono">{status.label}</span>
-        </div>
+        {status && (
+          <div className="connection-indicator" style={{ '--status-color': status.color } as any}>
+            <span className="status-dot"></span>
+            <span className="status-text">{status.text}</span>
+            <span className="status-label text-mono">{status.label}</span>
+          </div>
+        )}
 
         <button className="icon-btn" title="Sign Out" onClick={() => { clearAuthSession(); navigate('/login', { replace: true }); }}>
           <span>Sign Out</span>
