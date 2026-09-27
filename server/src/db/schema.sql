@@ -48,3 +48,10 @@ CREATE TABLE IF NOT EXISTS doc_updates (
 );
 
 ALTER TABLE doc_updates ADD COLUMN IF NOT EXISTS user_id TEXT;
+
+-- Legacy documents predate ownership. Assign them automatically only when there
+-- is exactly one account, so the intended owner is unambiguous.
+UPDATE documents
+SET owner_id = (SELECT id FROM users ORDER BY created_at, id LIMIT 1)
+WHERE owner_id IS NULL
+  AND (SELECT COUNT(*) FROM users) = 1;

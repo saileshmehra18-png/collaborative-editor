@@ -1,3 +1,5 @@
+import { API_BASE } from '../config';
+
 export type AuthUser = {
     id: string;
     name: string;
@@ -21,7 +23,7 @@ type LoginCredentials = {
     password: string;
 };
 
-const AUTH_API_URL = '/api/auth';
+const AUTH_API_URL = `${API_BASE}/api/auth`;
 
 async function postAuthRequest(
     endpoint: 'signup' | 'login',

@@ -18,9 +18,10 @@ function Dashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newDocTitle, setNewDocTitle] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [error, setError] = useState('')
+  const [creating, setCreating] = useState(false)
   const navigate = useNavigate()
-
-  const userName = getAuthSession()?.user.name || 'Anonymous'
+  const userName = getAuthSession()?.user.name || 'Account'
 
   useEffect(() => {
     loadDocuments()
@@ -28,6 +29,7 @@ function Dashboard() {
 
   async function loadDocuments() {
     try {
+      setError('')
       const token = getAuthSession()?.token
       const res = await fetch(`${API_BASE}/api/documents`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
@@ -37,12 +39,15 @@ function Dashboard() {
       setDocuments(data)
     } catch (error) {
       console.error('Failed to load documents:', error)
+      setError(error instanceof Error ? error.message : 'Unable to load documents. Check your connection and try again.')
     } finally {
       setLoading(false)
     }
   }
 
   async function createDocument() {
+    if (creating) return
+    setCreating(true)
     try {
       const token = getAuthSession()?.token
       const res = await fetch(`${API_BASE}/api/documents`, {
@@ -51,7 +56,7 @@ function Dashboard() {
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
-        body: JSON.stringify({ title: newDocTitle || 'Untitled Document' })
+        body: JSON.stringify({ title: newDocTitle.trim() || 'Untitled' })
       })
 
       if (!res.ok) {
@@ -64,7 +69,9 @@ function Dashboard() {
       navigate(`/documents/${doc.id}`)
     } catch (error) {
       console.error('Failed to create document:', error)
-      alert('Failed to create document. Please try again.')
+      setError(error instanceof Error ? error.message : 'Failed to create document. Please try again.')
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -89,12 +96,7 @@ function Dashboard() {
 
   return (
     <div className="dashboard">
-      <TopNav
-        userName={userName}
-        breadcrumbs={[{ label: 'Documents', path: '/documents' }]}
-        connectionStatus="disconnected"
-        onlineUsers={1}
-      />
+      <TopNav userName={userName} />
 
       <main className="dashboard-main">
         <div className="dashboard-hero">
@@ -137,6 +139,8 @@ function Dashboard() {
               <div className="spinner"></div>
               <p>Loading your documents...</p>
             </div>
+          ) : error ? (
+            <div className="empty-state" role="alert"><h3>Documents unavailable</h3><p>{error}</p><button className="btn-primary" onClick={() => { setLoading(true); void loadDocuments() }}>Try again</button></div>
           ) : filteredDocuments.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">📄</div>
@@ -235,11 +239,11 @@ function Dashboard() {
               <button className="btn-secondary" onClick={() => setShowCreateModal(false)}>
                 Cancel
               </button>
-              <button className="btn-primary" onClick={createDocument}>
+              <button className="btn-primary" disabled={creating} onClick={createDocument}>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
-                Create Document
+                {creating ? 'Creating…' : 'Create Document'}
               </button>
             </div>
           </div>

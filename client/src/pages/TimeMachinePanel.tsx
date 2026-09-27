@@ -4,6 +4,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useState } from 'react';
 import * as Y from 'yjs';
+import { API_BASE } from '../config';
 import { getAuthSession } from '../auth/authStorage';
 import './TimeMachinePanel.css';
 
@@ -33,6 +34,7 @@ type TimeMachinePanelProps = {
     currentText: string | null;
     onRestore: (content: JSONContent) => void;
     onSessionsChange?: (sessions: HistorySession[]) => void;
+    canRestore?: boolean;
 };
 
 function getAuthorLabel(session: HistorySession): string {
@@ -53,11 +55,13 @@ function HistoricalPreview({
     session,
     currentText,
     onRestore,
+    canRestore = true,
 }: {
     checkpoint: HistoryCheckpoint;
     session: HistorySession;
     currentText: string | null;
     onRestore: (content: JSONContent) => void;
+    canRestore: boolean;
 }) {
     const [ydoc] = useState(() => {
         const document = new Y.Doc();
@@ -120,9 +124,9 @@ function HistoricalPreview({
             </div>
             <div className="time-machine-actions">
                 <span>Preview only until restored</span>
-                <button type="button" disabled={!editor} onClick={restore}>
+                {canRestore && <button type="button" disabled={!editor} onClick={restore}>
                     Restore this version
-                </button>
+                </button>}
             </div>
             <div className="time-machine-text-comparison">
                 <div>
@@ -143,6 +147,7 @@ export default function TimeMachinePanel({
     currentText,
     onRestore,
     onSessionsChange,
+    canRestore = true,
 }: TimeMachinePanelProps) {
     const [sessions, setSessions] = useState<HistorySession[]>([]);
     const [selectedCheckpointVersion, setSelectedCheckpointVersion] = useState<string | null>(null);
@@ -156,7 +161,7 @@ export default function TimeMachinePanel({
         setLoading(true);
         setError(null);
 
-        fetch(`/api/documents/${encodeURIComponent(docId)}/history`, {
+        fetch(`${API_BASE}/api/documents/${encodeURIComponent(docId)}/history`, {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
             signal: controller.signal,
         })
@@ -194,7 +199,7 @@ export default function TimeMachinePanel({
     ) ?? null;
 
     return (
-        <details className="time-machine-panel" open>
+        <details className="time-machine-panel">
             <summary>
                 <span>Time Machine</span>
                 <span className="time-machine-count">
@@ -251,6 +256,7 @@ export default function TimeMachinePanel({
                     session={selectedSession}
                     currentText={currentText}
                     onRestore={onRestore}
+                    canRestore={canRestore}
                 />
             )}
         </details>

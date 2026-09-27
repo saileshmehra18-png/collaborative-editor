@@ -5,6 +5,7 @@ import {
     encodeAwarenessUpdate,
 } from 'y-protocols/awareness';
 import { getAuthSession } from '../auth/authStorage';
+import { WS_URL } from '../config';
 
 export type ProviderStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 export type ProviderSyncStatus = 'idle' | 'offline' | 'syncing' | 'synced';
@@ -83,8 +84,7 @@ export class CustomYjsWebSocketProvider {
             return;
         }
 
-        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const endpoint = new URL(`${wsProtocol}//${window.location.host}/ws`);
+        const endpoint = new URL(WS_URL);
         endpoint.searchParams.set('docId', docId);
         endpoint.searchParams.set('token', token);
         this.endpoint = endpoint;

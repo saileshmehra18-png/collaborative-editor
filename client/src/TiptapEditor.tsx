@@ -57,6 +57,7 @@ export type TiptapEditorProps = {
     onOfflineEditCountChange?: (count: number) => void;
     onSyncStatusChange?: (status: ProviderSyncStatus) => void;
     renderToolbar?: (editor: TiptapEditorInstance | null) => ReactNode;
+    editable?: boolean;
 };
 
 export type EditorDiagnostics = {
@@ -115,6 +116,7 @@ export default function TiptapEditor({
     onOfflineEditCountChange,
     onSyncStatusChange,
     renderToolbar,
+    editable = true,
 }: TiptapEditorProps) {
     const [ydoc] = useState(() => new Y.Doc());
     const [provider, setProvider] = useState<CustomYjsWebSocketProvider | null>(null);
@@ -164,8 +166,8 @@ export default function TiptapEditor({
             Placeholder.configure({ placeholder: 'Start writing here...' }),
             ...(collaborationCaret ? [collaborationCaret] : []),
         ],
-        editable: true,
-    }, [provider]);
+        editable,
+    }, [editable, provider]);
 
     useEffect(() => {
         if (!provider) {
